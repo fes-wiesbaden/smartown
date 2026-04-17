@@ -1,7 +1,9 @@
-# Smarte Stadt – Projektantrag 2026 (11BE13)
+# SmarTown
+
+[Überblick](#überblick) | [Anforderungen](#anforderungen) | [Zeitraum](#zeitraum) | [Projektumfeld](#projektumfeld) | [Netzwerk](#netzwerk) | [Vorhandene Hardware](#vorhandene-hardware) | [Muss-Funktionen](#muss-funktionen) | [Kann-Funktionen](#kann-funktionen-optional-wenn-zeit-reicht) | [Meilensteine](#meilensteine) | [Architektur](#architektur-grob) | [Entwicklungsworkflow](#entwicklungsworkflow) | [Entwicklungsregeln Git](#entwicklungsregeln-git) | [Datenfluss](#datenfluss)
 
 ## Überblick
-Miniatur-"Smarte Stadt" als IoT-Demomodell. Mehrere Bereiche (MUSS: (Skilift, Klappbrücke, Flughafen, Straßenlaternen) sind mit Sensoren und Aktoren ausgestattet und werden über eine Weboberfläche überwacht und gesteuert. Ereignisse lösen automatisierte Abläufe aus, einige Funktionen sind zusätzlich manuell schaltbar. Module sind einzeln testbar und laufen am Ende als Gesamtsystem in einer Live-Demo. Das Projekt soll mit Scrum bearbeitet werden.
+Miniatur-"Smarte Stadt" als IoT-Demomodell. Mehrere Bereiche sind mit Sensoren und Aktoren ausgestattet und werden über eine Weboberfläche überwacht und gesteuert. Ereignisse lösen automatisierte Abläufe aus, einige Funktionen sind zusätzlich manuell schaltbar. Module sind einzeln testbar und laufen am Ende als Gesamtsystem in einer Live-Demo. Das Projekt soll mit Scrum bearbeitet werden.
 
 ## Anforderungen
 
@@ -16,26 +18,12 @@ Miniatur-"Smarte Stadt" als IoT-Demomodell. Mehrere Bereiche (MUSS: (Skilift, Kl
 |---|---|
 | 22.01.2026 | 06.05.2026 |
 
-## Team
-| Rolle | Name |
-|---|---|
-| Projektleiter | Jan Trautwein |
-| Stellv. Projektleiter | David Kusnezov |
-| Projektmitarbeiter | Benjamin Gold |
-| Projektmitarbeiter | Julius Hahn |
-
-## Projektumfeld
-- Schulprojekt im Team (4 Personen)
-- 3D-Druck für das Stadtmodell
-- Gängige IoT-Komponenten: Microcontroller, LED-Module, Motor-/Servo-Ansteuerung, Helligkeitssensor, Gewichtssensor
-- Entwicklung und Tests im Klassenraum auf Tischaufbau
-- Steuerung und Visualisierung über lokale Webanwendung (Frontend/Backend) im selben Netzwerk
-
 ## Netzwerk
 | Gerät | IP-Adresse | Subnetzmaske | Gateway | DNS |
 |---|---|---|---|---|
 | Raspberry Pi | 10.93.128.204 | 255.255.240.0 | 10.93.128.1 | 10.93.128.1 |
-| Verbundener Laptop | 10.93.128.205 | 255.255.240.0 | 10.93.128.1 | 10.93.128.1 |
+
+## Techstack
 
 ## Vorhandene Hardware
 - 3x DC 5V Stepper Motor 28BYJ-48 mit Treiberboard
