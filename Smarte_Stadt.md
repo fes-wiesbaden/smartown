@@ -1,6 +1,6 @@
 # SmarTown
 
-[Überblick](#überblick) | [Anforderungen](#anforderungen) | [Zeitraum](#zeitraum) | [Projektumfeld](#projektumfeld) | [Netzwerk](#netzwerk) | [Vorhandene Hardware](#vorhandene-hardware) | [Muss-Funktionen](#muss-funktionen) | [Kann-Funktionen](#kann-funktionen-optional-wenn-zeit-reicht) | [Meilensteine](#meilensteine) | [Architektur](#architektur-grob) | [Entwicklungsworkflow](#entwicklungsworkflow) | [Entwicklungsregeln Git](#entwicklungsregeln-git) | [Datenfluss](#datenfluss)
+[Überblick](#überblick) | [Anforderungen](#anforderungen) | [Zeitraum](#zeitraum) | [Projektumfeld](#projektumfeld) | [Netzwerk](#netzwerk) | [Techstack](#techstack) | [Vorhandene Hardware](#vorhandene-hardware) | [Muss-Funktionen](#muss-funktionen) | [Kann-Funktionen](#kann-funktionen-optional-wenn-zeit-reicht) | [Meilensteine](#meilensteine) | [Architektur](#architektur-grob) | [Entwicklungsworkflow](#entwicklungsworkflow) | [Entwicklungsregeln Git](#entwicklungsregeln-git) | [Datenfluss](#datenfluss)
 
 ## Überblick
 Miniatur-"Smarte Stadt" als IoT-Demomodell. Mehrere Bereiche sind mit Sensoren und Aktoren ausgestattet und werden über eine Weboberfläche überwacht und gesteuert. Ereignisse lösen automatisierte Abläufe aus, einige Funktionen sind zusätzlich manuell schaltbar. Module sind einzeln testbar und laufen am Ende als Gesamtsystem in einer Live-Demo. Das Projekt soll mit Scrum bearbeitet werden.
@@ -24,6 +24,15 @@ Miniatur-"Smarte Stadt" als IoT-Demomodell. Mehrere Bereiche sind mit Sensoren u
 | Raspberry Pi | 10.93.128.204 | 255.255.240.0 | 10.93.128.1 | 10.93.128.1 |
 
 ## Techstack
+- Java
+- Spring Boot
+- Vue.js
+- TypeScript
+- Docker
+- MQTT
+- MySQL oder SQLite
+- WebSocket
+- REST-API
 
 ## Vorhandene Hardware
 - 3x DC 5V Stepper Motor 28BYJ-48 mit Treiberboard
