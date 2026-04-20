@@ -1,6 +1,27 @@
+<div align="center">
+
 # SmarTown
 
-[Überblick](#überblick) | [Anforderungen](#anforderungen) | [Zeitraum](#zeitraum) | [Projektumfeld](#projektumfeld) | [Netzwerk](#netzwerk) | [Techstack](#techstack) | [Vorhandene Hardware](#vorhandene-hardware) | [Muss-Funktionen](#muss-funktionen) | [Kann-Funktionen](#kann-funktionen-optional-wenn-zeit-reicht) | [Meilensteine](#meilensteine) | [Architektur](#architektur-grob) | [Entwicklungsworkflow](#entwicklungsworkflow) | [Entwicklungsregeln Git](#entwicklungsregeln-git) | [Datenfluss](#datenfluss)
+IoT-Demostadt mit ESP32, MQTT, Spring Boot, Vue und Live-Steuerung ueber das Web.
+
+<sub><strong>Tech Stack</strong></sub>
+
+[![Frontend: Vue 3, TypeScript 5, Vite 7](https://img.shields.io/badge/Frontend-Vue%203%20%7C%20TypeScript%205%20%7C%20Vite%207-42B883?style=for-the-badge&logo=vuedotjs&logoColor=white)](#techstack)
+[![UI: Tailwind CSS 4](https://img.shields.io/badge/UI-Tailwind%20CSS%204-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](#techstack)
+[![Backend: Java 21, Spring Boot 3.5](https://img.shields.io/badge/Backend-Java%2021%20%7C%20Spring%20Boot%203.5-6DB33F?style=for-the-badge&logo=springboot&logoColor=white)](#techstack)
+[![Messaging: MQTT 3.1.1, WebSocket](https://img.shields.io/badge/Messaging-MQTT%203.1.1%20%7C%20WebSocket-7A3EF0?style=for-the-badge&logo=eclipsemosquitto&logoColor=white)](#techstack)
+[![Data: MariaDB 11.8, Docker](https://img.shields.io/badge/Data-MariaDB%2011.8%20%7C%20Docker-003545?style=for-the-badge&logo=mariadb&logoColor=white)](#techstack)
+[![Firmware: Arduino, ESP32](https://img.shields.io/badge/Firmware-Arduino%20%7C%20ESP32-00979D?style=for-the-badge&logo=arduino&logoColor=white)](#techstack)
+
+[![Open Issues](https://img.shields.io/github/issues/fes-wiesbaden/iot-smartown-gruppe-1?style=flat-square)](https://github.com/fes-wiesbaden/iot-smartown-gruppe-1/issues)
+[![Closed Issues](https://img.shields.io/github/issues-closed/fes-wiesbaden/iot-smartown-gruppe-1?style=flat-square)](https://github.com/fes-wiesbaden/iot-smartown-gruppe-1/issues?q=is%3Aissue+is%3Aclosed)
+[![Last Commit](https://img.shields.io/github/last-commit/fes-wiesbaden/iot-smartown-gruppe-1/main?style=flat-square)](https://github.com/fes-wiesbaden/iot-smartown-gruppe-1/commits/main)
+[![Stars](https://img.shields.io/github/stars/fes-wiesbaden/iot-smartown-gruppe-1?style=flat-square)](https://github.com/fes-wiesbaden/iot-smartown-gruppe-1/stargazers)
+[![Forks](https://img.shields.io/github/forks/fes-wiesbaden/iot-smartown-gruppe-1?style=flat-square)](https://github.com/fes-wiesbaden/iot-smartown-gruppe-1/network/members)
+
+[Überblick](#überblick) • [Anforderungen](#anforderungen) • [Zeitraum](#zeitraum) • [Netzwerk](#netzwerk) • [Techstack](#techstack) • [Vorhandene Hardware](#vorhandene-hardware) • [Muss-Funktionen](#muss-funktionen) • [Kann-Funktionen](#kann-funktionen-optional-wenn-zeit-reicht) • [Meilensteine](#meilensteine) • [Architektur](#architektur-grob) • [Entwicklungsworkflow](#entwicklungsworkflow) • [Entwicklungsregeln Git](#entwicklungsregeln-git) • [Datenfluss](#datenfluss)
+
+</div>
 
 ## Überblick
 Miniatur-"Smarte Stadt" als IoT-Demomodell. Mehrere Bereiche sind mit Sensoren und Aktoren ausgestattet und werden über eine Weboberfläche überwacht und gesteuert. Ereignisse lösen automatisierte Abläufe aus, einige Funktionen sind zusätzlich manuell schaltbar. Module sind einzeln testbar und laufen am Ende als Gesamtsystem in einer Live-Demo. Das Projekt soll mit Scrum bearbeitet werden.
