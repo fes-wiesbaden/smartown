@@ -10,7 +10,7 @@ Miniatur-"Smarte Stadt" als IoT-Demomodell. Mehrere Bereiche sind mit Sensoren u
 - Erfassung von Sensordaten über Mikrocontroller und Sensoren
 - Nutzung eines MQTT-Brokers zur Datenübertragung
 - Verarbeitung der Sensordaten mit einer eigenen oder angepassten Anwendung
-- Speicherung der Daten in einer MySQL- oder SQLite-Datenbank
+- Speicherung der Daten in einer MariaDB-Datenbank
 - Visualisierung und Interaktion im Browser
 
 ## Zeitraum
@@ -24,15 +24,18 @@ Miniatur-"Smarte Stadt" als IoT-Demomodell. Mehrere Bereiche sind mit Sensoren u
 | Raspberry Pi | 10.93.128.204 | 255.255.240.0 | 10.93.128.1 | 10.93.128.1 |
 
 ## Techstack
-- Java
-- Spring Boot
-- Vue.js
+- Java 21
+- Spring Boot 3.5.x
+- Vue 3
+- Vite
 - TypeScript
+- Tailwind CSS
 - Docker
-- MQTT
-- MySQL oder SQLite
+- MQTT 3.1.1
+- MariaDB
 - WebSocket
 - REST-API
+- Arduino für ESP32-Firmware
 
 ## Vorhandene Hardware
 - 3x DC 5V Stepper Motor 28BYJ-48 mit Treiberboard
@@ -47,7 +50,7 @@ Miniatur-"Smarte Stadt" als IoT-Demomodell. Mehrere Bereiche sind mit Sensoren u
 - Standard LED-Sortiment 3mm mit Vorwiderständen von Quadrios, Artikelnr: QUAD 1801O003
 - Jede Menge Jumper-Kabel
 - 1x Raspberry Pi 5, 4GB RAM mit SATA SSD 500 GB
-- 1x BY1750
+- 1x BH1750
 
 ## Muss-Funktionen
 
@@ -60,6 +63,7 @@ Miniatur-"Smarte Stadt" als IoT-Demomodell. Mehrere Bereiche sind mit Sensoren u
 - **Sensor 1 (vor der Brücke):** erkennt anfahrendes Boot → Brücke fährt hoch
 - **Sensor 2 (nach der Brücke):** erkennt, dass das Boot durch ist → Brücke fährt runter
 - Not-Aus / Manuell-Override
+- Der Stepper hebt die Brücke einseitig an
 
 ### Flughafen
 - Landelichter schalten bei "Landung" nacheinander (Sequenz)
@@ -68,7 +72,8 @@ Miniatur-"Smarte Stadt" als IoT-Demomodell. Mehrere Bereiche sind mit Sensoren u
 
 ### Laternen
 - Automatisch abhängig von Helligkeit (dunkel = an, hell = aus)
-- Schwellwert optional einstellbar
+- Zusätzlich manuell über das Frontend schaltbar
+- (Schwellwert über das Frontend einstellbar, finaler Wert wird im Projektverlauf ermittelt)
 
 ## Kann-Funktionen (optional, wenn Zeit reicht)
 - **Mautstation:** Gewicht erfassen, Preis nach Gewicht berechnen, Anzeige im Frontend (optional Speicherung als Verlauf)
@@ -91,18 +96,19 @@ Miniatur-"Smarte Stadt" als IoT-Demomodell. Mehrere Bereiche sind mit Sensoren u
 ## Architektur (grob)
 | Schicht | Inhalt |
 |---|---|
-| Hardware | ESP32, Sensoren (Helligkeit, Gewicht), Aktoren (Servo, Motor, LEDs) |
-| Firmware | Sensoren einlesen, Aktoren steuern, MQTT-Kommunikation |
-| Raspberry Pi | Zentrale Plattform für den Finalbetrieb mit Docker, dabei 2 Container: 1 Container für den MQTT-Broker und 1 Container für die Anwendung mit Spring Boot Backend, Vue.js Frontend und Datenbank |
-| Backend | REST-API für Steuerbefehle, MQTT-Subscriber/Publisher, Event-Logik, Speicherung in DB, Weitergabe von Live-Daten per WebSocket |
-| Frontend | Vue.js Dashboard für Live-Status, Event-Log und manuelle Steuerung |
-| Datenbank | Speicherung von Zuständen, Events und optional Messwert-Verläufen |
+| Hardware | ESP32, Sensoren wie BH1750 und Ultraschall, Aktoren wie Stepper, Relais und LEDs |
+| Firmware | Arduino-basierte ESP32-Firmware, liest Sensoren ein, empfängt Befehle per MQTT und setzt Aktoren um |
+| Raspberry Pi | Zentrale Plattform für den Finalbetrieb mit Docker und 3 Containern: MQTT-Broker, Anwendung mit Spring Boot Backend und Vue-Frontend sowie MariaDB |
+| Backend | REST-API für Steuerbefehle, MQTT-Subscriber/Publisher, Entscheidungslogik, Speicherung in MariaDB, Weitergabe von Live-Daten per WebSocket |
+| Frontend | Vue-Dashboard für Live-Status, Schalter und Parametrierung wie Schwellwerte |
+| Datenbank | MariaDB zur Speicherung von Zuständen, Konfiguration und optional später Historien |
 
 ## Entwicklungsworkflow
-1. Zwei Teammitglieder testen Hardware jeweils mit einem eigenen ESP32 direkt per USB-C/USB am Laptop. Sensorik, Aktorik, Flashen und serielle Logs werden dabei lokal getestet. Solange nur die serielle Verbindung genutzt wird, spielen statische IP-Adressen keine Rolle.
-2. Zwei Teammitglieder entwickeln parallel Backend, Frontend und Datenbank zunächst lokal mit Mock-Daten oder einem kleinen Simulator für Sensorwerte.
-3. In der Integrationsphase werden Firmware, MQTT, REST, WebSocket und Hardware schrittweise zusammengeführt. Erst ab der Netzwerkintegration von ESP32 und Raspberry Pi sind statische IP-Adressen relevant.
-4. Im Finalbetrieb läuft die Anwendung dann auf dem Raspberry Pi in 2 Docker-Containern: 1 Container für den MQTT-Broker und 1 Container für die Anwendung.
+1. Während der Entwicklung können mehrere ESP32 parallel genutzt werden. Im finalen Produkt wird nur ein ESP32 eingesetzt.
+2. Hardwaretests laufen direkt per USB-C/USB am Laptop. Sensorik, Aktorik, Flashen und serielle Logs werden lokal getestet. Solange nur die serielle Verbindung genutzt wird, spielen statische IP-Adressen keine Rolle.
+3. Backend, Frontend und Datenbank werden zunächst lokal mit Mock-Daten oder einem kleinen Simulator für Sensorwerte entwickelt.
+4. In der Integrationsphase werden Firmware, MQTT, REST, WebSocket und Hardware schrittweise zusammengeführt. Erst ab der Netzwerkintegration von ESP32 und Raspberry Pi sind statische IP-Adressen relevant.
+5. Im Finalbetrieb läuft die Anwendung dann auf dem Raspberry Pi in 3 Docker-Containern: MQTT-Broker, Anwendung mit Backend und Frontend sowie MariaDB.
 
 ## Entwicklungsregeln Git
 1. Es gibt die Branches `main` und `dev`.
@@ -114,9 +120,9 @@ Miniatur-"Smarte Stadt" als IoT-Demomodell. Mehrere Bereiche sind mit Sensoren u
 
 ## Datenfluss
 1. Sensoren liefern Messwerte an den ESP32.
-2. Der ESP32 verarbeitet Messwerte und sendet Zustände/Sensordaten per MQTT an den Raspberry Pi.
-3. Das Spring Boot Backend verarbeitet die MQTT-Nachrichten und speichert relevante Daten in der Datenbank.
-4. Das Backend überträgt Live-Daten per WebSocket an das Vue.js Frontend.
-5. Steuerbefehle aus dem Frontend gehen per REST an das Backend.
-6. Das Backend sendet die Steuerbefehle per MQTT an den ESP32.
-7. Der ESP32 führt die Aktion aus und meldet den neuen Status erneut per MQTT zurück.
+2. Der ESP32 sendet Zustände und Sensordaten per MQTT an den Raspberry Pi.
+3. Das Spring Boot Backend verarbeitet die MQTT-Nachrichten, trifft die Fachentscheidungen und speichert relevante Daten in der MariaDB.
+4. Das Backend überträgt Live-Daten per WebSocket an das Vue-Frontend.
+5. Steuerbefehle und Konfigurationsänderungen aus dem Frontend gehen per REST an das Backend.
+6. Das Backend sendet die resultierenden Steuerbefehle per MQTT an den ESP32.
+7. Der ESP32 setzt die Aktion um und meldet den neuen Status erneut per MQTT zurück.
