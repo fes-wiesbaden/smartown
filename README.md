@@ -19,7 +19,7 @@ IoT-Demostadt mit ESP32, MQTT, Spring Boot, Vue und Live-Steuerung ueber das Web
 [![Stars](https://img.shields.io/github/stars/fes-wiesbaden/iot-smartown-gruppe-1?style=flat-square)](https://github.com/fes-wiesbaden/iot-smartown-gruppe-1/stargazers)
 [![Forks](https://img.shields.io/github/forks/fes-wiesbaden/iot-smartown-gruppe-1?style=flat-square)](https://github.com/fes-wiesbaden/iot-smartown-gruppe-1/network/members)
 
-[Überblick](#überblick) • [Anforderungen](#anforderungen) • [Zeitraum](#zeitraum) • [Netzwerk](#netzwerk) • [Techstack](#techstack) • [Vorhandene Hardware](#vorhandene-hardware) • [Muss-Funktionen](#muss-funktionen) • [Kann-Funktionen](#kann-funktionen-optional-wenn-zeit-reicht) • [Meilensteine](#meilensteine) • [Architektur](#architektur-grob) • [Entwicklungsworkflow](#entwicklungsworkflow) • [Entwicklungsregeln Git](#entwicklungsregeln-git) • [Datenfluss](#datenfluss)
+[Überblick](#überblick) • [Anforderungen](#anforderungen) • [Zeitraum](#zeitraum) • [Netzwerk](#netzwerk) • [Techstack](#techstack) • [Lokale Entwicklung](#lokale-entwicklung) • [Vorhandene Hardware](#vorhandene-hardware) • [Muss-Funktionen](#muss-funktionen) • [Kann-Funktionen](#kann-funktionen-optional-wenn-zeit-reicht) • [Meilensteine](#meilensteine) • [Architektur](#architektur-grob) • [Entwicklungsworkflow](#entwicklungsworkflow) • [Entwicklungsregeln Git](#entwicklungsregeln-git) • [Datenfluss](#datenfluss)
 
 </div>
 
@@ -57,6 +57,93 @@ Miniatur-"Smarte Stadt" als IoT-Demomodell. Mehrere Bereiche sind mit Sensoren u
 - WebSocket
 - REST-API
 - Arduino für ESP32-Firmware
+
+## Lokale Entwicklung
+
+### Voraussetzungen
+- Git
+- Docker mit Docker Compose
+- Java 21
+- Node.js 20.19 oder 22.12+
+
+Falls Docker ohne `sudo` nicht funktioniert:
+
+```bash
+sudo usermod -aG docker $USER
+```
+
+Danach abmelden und neu anmelden. Die `docker`-Gruppe hat weitreichende Rechte, deshalb nur eigene Entwickler-Accounts hinzufügen.
+
+### Projekt kopieren
+
+```bash
+git clone https://github.com/fes-wiesbaden/iot-smartown-gruppe-1.git
+cd iot-smartown-gruppe-1
+cp .env.example .env
+```
+
+Die Datei `.env` enthält lokale Zugangsdaten und wird nicht committet. Bei Port-Konflikten `MARIADB_PORT` oder `BACKEND_PORT` in `.env` ändern.
+
+### Lokale Entwicklung starten
+
+MariaDB läuft lokal per Docker:
+
+```bash
+docker compose up -d mariadb
+```
+
+Backend lokal starten:
+
+```bash
+cd backend
+./mvnw spring-boot:run
+```
+
+Backend-Tests nutzen Testcontainers und brauchen Docker-Zugriff:
+
+```bash
+cd backend
+./mvnw test
+```
+
+Frontend lokal starten:
+
+```bash
+cd frontend
+npm ci
+npm run dev
+```
+
+URLs:
+
+| Dienst | URL |
+|---|---|
+| Frontend Dev-Server | http://localhost:5173 |
+| Backend | http://localhost:8080 |
+| Backend Healthcheck | http://localhost:8080/actuator/health |
+| Swagger UI | http://localhost:8080/swagger-ui.html |
+
+### Gesamte App per Docker starten
+
+Für Demo oder finalen Betrieb werden Frontend und Backend zusammen in einem App-Container gebaut. MariaDB läuft in einem zweiten Container.
+
+```bash
+docker compose up --build
+```
+
+Danach läuft die App unter:
+
+```text
+http://localhost:8080
+```
+
+### Datenbank zurücksetzen
+
+Nur ausführen, wenn lokale Daten gelöscht werden dürfen:
+
+```bash
+docker compose down -v
+```
 
 ## Vorhandene Hardware
 - 3x DC 5V Stepper Motor 28BYJ-48 mit Treiberboard
@@ -119,7 +206,7 @@ Miniatur-"Smarte Stadt" als IoT-Demomodell. Mehrere Bereiche sind mit Sensoren u
 |---|---|
 | Hardware | ESP32, Sensoren wie BH1750 und Ultraschall, Aktoren wie Stepper, Relais und LEDs |
 | Firmware | Arduino-basierte ESP32-Firmware, liest Sensoren ein, empfängt Befehle per MQTT und setzt Aktoren um |
-| Raspberry Pi | Zentrale Plattform für den Finalbetrieb mit Docker und 3 Containern: MQTT-Broker, Anwendung mit Spring Boot Backend und Vue-Frontend sowie MariaDB |
+| Raspberry Pi | Zentrale Plattform für den Finalbetrieb mit Docker: Anwendung mit Spring Boot Backend und Vue-Frontend, MariaDB sowie später MQTT-Broker |
 | Backend | REST-API für Steuerbefehle, MQTT-Subscriber/Publisher, Entscheidungslogik, Speicherung in MariaDB, Weitergabe von Live-Daten per WebSocket |
 | Frontend | Vue-Dashboard für Live-Status, Schalter und Parametrierung wie Schwellwerte |
 | Datenbank | MariaDB zur Speicherung von Zuständen, Konfiguration und optional später Historien |
@@ -129,7 +216,7 @@ Miniatur-"Smarte Stadt" als IoT-Demomodell. Mehrere Bereiche sind mit Sensoren u
 2. Hardwaretests laufen direkt per USB-C/USB am Laptop. Sensorik, Aktorik, Flashen und serielle Logs werden lokal getestet. Solange nur die serielle Verbindung genutzt wird, spielen statische IP-Adressen keine Rolle.
 3. Backend, Frontend und Datenbank werden zunächst lokal mit Mock-Daten oder einem kleinen Simulator für Sensorwerte entwickelt.
 4. In der Integrationsphase werden Firmware, MQTT, REST, WebSocket und Hardware schrittweise zusammengeführt. Erst ab der Netzwerkintegration von ESP32 und Raspberry Pi sind statische IP-Adressen relevant.
-5. Im Finalbetrieb läuft die Anwendung dann auf dem Raspberry Pi in 3 Docker-Containern: MQTT-Broker, Anwendung mit Backend und Frontend sowie MariaDB.
+5. Im Finalbetrieb läuft die Anwendung dann auf dem Raspberry Pi mit Docker: ein App-Container für Backend und Frontend, ein MariaDB-Container und später ein MQTT-Broker.
 
 ## Entwicklungsregeln Git
 1. Es gibt die Branches `main` und `dev`.
