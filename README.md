@@ -122,7 +122,6 @@ URLs:
 | Backend | http://localhost:8080 |
 | Backend Healthcheck | http://localhost:8080/actuator/health |
 | Swagger UI | http://localhost:8080/swagger-ui.html |
-| Docker-App | http://localhost:8081 |
 
 ### Gesamte App per Docker starten
 
@@ -135,7 +134,7 @@ docker compose up --build
 Danach läuft die App unter:
 
 ```text
-http://localhost:8081
+http://localhost:8080
 ```
 
 ### Datenbank zurücksetzen
