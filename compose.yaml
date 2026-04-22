@@ -1,5 +1,5 @@
 services:
-  backend:
+  app:
     build:
       context: .
       dockerfile: backend/Dockerfile
@@ -11,7 +11,7 @@ services:
       SPRING_DATASOURCE_USERNAME: ${MARIADB_USER}
       SPRING_DATASOURCE_PASSWORD: ${MARIADB_PASSWORD}
     ports:
-      - "${BACKEND_PORT}:8080"
+      - "${APP_PORT}:8080"
     depends_on:
       mariadb:
         condition: service_healthy

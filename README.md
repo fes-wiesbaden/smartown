@@ -82,7 +82,7 @@ cd iot-smartown-gruppe-1
 cp .env.example .env
 ```
 
-Die Datei `.env` enthält lokale Zugangsdaten und wird nicht committet. Bei Port-Konflikten `MARIADB_PORT` oder `BACKEND_PORT` in `.env` ändern.
+Die Datei `.env` enthält lokale Zugangsdaten und wird nicht committet. Bei Port-Konflikten `MARIADB_PORT` oder `APP_PORT` in `.env` ändern.
 
 ### Lokale Entwicklung starten
 
@@ -125,7 +125,7 @@ URLs:
 
 ### Gesamte App per Docker starten
 
-Für Demo oder finalen Betrieb werden Frontend und Backend zusammen in einem App-Container gebaut. MariaDB läuft in einem zweiten Container.
+Für Demo oder finalen Betrieb werden Frontend und Backend zusammen im Compose-Service `app` gebaut. MariaDB läuft im zweiten Service `mariadb`.
 
 ```bash
 docker compose up --build
