@@ -24,9 +24,5 @@ RUN addgroup --system spring && adduser --system --ingroup spring spring
 COPY --from=backend-build /workspace/target/backend-*.jar app.jar
 
 USER spring:spring
-
-# App hört auf Port 8080
 EXPOSE 8080
-
-# Startbefehl des Containers
 ENTRYPOINT ["java", "-jar", "app.jar"]
