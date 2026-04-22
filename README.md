@@ -34,29 +34,10 @@ Miniatur-"Smarte Stadt" als IoT-Demomodell. Mehrere Bereiche sind mit Sensoren u
 - Speicherung der Daten in einer MariaDB-Datenbank
 - Visualisierung und Interaktion im Browser
 
-## Zeitraum
-| Start | Ende |
-|---|---|
-| 22.01.2026 | 06.05.2026 |
-
 ## Netzwerk
 | Gerät | IP-Adresse | Subnetzmaske | Gateway | DNS |
 |---|---|---|---|---|
 | Raspberry Pi | 10.93.128.204 | 255.255.240.0 | 10.93.128.1 | 10.93.128.1 |
-
-## Techstack
-- Java 21
-- Spring Boot 3.5.x
-- Vue 3
-- Vite
-- TypeScript
-- Tailwind CSS
-- Docker
-- MQTT 3.1.1
-- MariaDB
-- WebSocket
-- REST-API
-- Arduino für ESP32-Firmware
 
 ## Lokale Entwicklung
 
@@ -65,12 +46,6 @@ Miniatur-"Smarte Stadt" als IoT-Demomodell. Mehrere Bereiche sind mit Sensoren u
 - Docker mit Docker Compose
 - Java 21
 - Node.js 20.19 oder 22.12+
-
-Falls Docker ohne `sudo` nicht funktioniert:
-
-```bash
-sudo usermod -aG docker $USER
-```
 
 Danach abmelden und neu anmelden. Die `docker`-Gruppe hat weitreichende Rechte, deshalb nur eigene Entwickler-Accounts hinzufügen.
 
@@ -183,14 +158,6 @@ docker compose down -v
 - Automatisch abhängig von Helligkeit (dunkel = an, hell = aus)
 - Zusätzlich manuell über das Frontend schaltbar
 - (Schwellwert über das Frontend einstellbar, finaler Wert wird im Projektverlauf ermittelt)
-
-## Kann-Funktionen (optional, wenn Zeit reicht)
-- **Mautstation:** Gewicht erfassen, Preis nach Gewicht berechnen, Anzeige im Frontend (optional Speicherung als Verlauf)
-- **Bombenwarnsystem (Simulation):** Warn-Event schaltet rote Warnlichter (optional akustisches Signal), Ereignis im Frontend sichtbar/logbar
-- **Ampelsystem**
-- **Zugübergang** mit Schranken
-- **Windräder** als "Energie-Event" für Laternen
-- **Baustellenbezirk** mit Zutrittswarnung
 
 ## Meilensteine
 1. **Anforderungsanalyse** – Muss-/Kann-Funktionen, Backlog & Grobkonzept (Sensorik/Aktorik, Datenfluss, UI)
