@@ -1,19 +1,27 @@
 services:
-  mqtt:
+  app:
     build:
-      context: ./mqtt
+      context: .
+      dockerfile: Dockerfile
     restart: unless-stopped
+    env_file:
+      - .env
     environment:
-      MQTT_USERNAME: ${MQTT_USERNAME:?set MQTT_USERNAME in .env}
-      MQTT_PASSWORD: ${MQTT_PASSWORD:?set MQTT_PASSWORD in .env}
+      SPRING_DATASOURCE_URL: jdbc:mariadb://mariadb:3306/${MARIADB_DATABASE}
+      SPRING_DATASOURCE_USERNAME: ${MARIADB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${MARIADB_PASSWORD}
+    # innerer App_Port, außen 8081
     ports:
-      - "${MQTT_PORT:?set MQTT_PORT in .env}:1883"
-    volumes:
-      - smartown-mqtt-data:/mosquitto/data
+      - "${APP_PORT}:8080"
+    depends_on:
+      mariadb:
+        condition: service_healthy
 
   mariadb:
     image: mariadb:11.8
     restart: unless-stopped
+    env_file:
+      - .env
     environment:
       MARIADB_DATABASE: ${MARIADB_DATABASE}
       MARIADB_USER: ${MARIADB_USER}
@@ -23,9 +31,6 @@ services:
       - "${MARIADB_PORT}:3306"
     volumes:
       - smartown-mariadb-data:/var/lib/mysql
-    depends_on:
-      mqtt:
-        condition: service_started
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 10s
@@ -33,42 +38,5 @@ services:
       retries: 5
       start_period: 30s
 
-  backend:
-    build:
-      context: ./backend
-    restart: unless-stopped
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:mariadb://mariadb:3306/${MARIADB_DATABASE}
-      SPRING_DATASOURCE_USERNAME: ${MARIADB_USER}
-      SPRING_DATASOURCE_PASSWORD: ${MARIADB_PASSWORD}
-      SPRING_MQTT_HOST: mqtt
-      SPRING_MQTT_PORT: 1883
-      SPRING_MQTT_USERNAME: ${MQTT_USERNAME:?set MQTT_USERNAME in .env}
-      SPRING_MQTT_PASSWORD: ${MQTT_PASSWORD:?set MQTT_PASSWORD in .env}
-    ports:
-      - "${BACKEND_PORT:?set BACKEND_PORT in .env}:8080"
-    depends_on:
-      mariadb:
-        condition: service_healthy
-      mqtt:
-        condition: service_started
-    healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://localhost:8080/actuator/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 40s
-
-  frontend:
-    build:
-      context: ./frontend
-    restart: unless-stopped
-    ports:
-      - "${FRONTEND_PORT:?set FRONTEND_PORT in .env}:80"
-    depends_on:
-      backend:
-        condition: service_healthy
-
 volumes:
-  smartown-mqtt-data:
   smartown-mariadb-data:

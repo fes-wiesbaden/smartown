@@ -17,14 +17,13 @@ Das System steuert und ueberwacht ein physisches Smart-City-Demomodell. Sensorwe
 - Deployment: Docker auf Raspberry Pi
 
 ## Laufzeitarchitektur
-Im Finalbetrieb laufen vier Container auf dem Raspberry Pi:
+Im Finalbetrieb laufen drei Container auf dem Raspberry Pi:
 
 1. MQTT-Broker
-2. MariaDB
-3. Backend
-4. Frontend
+2. Anwendung mit Backend und Frontend
+3. MariaDB
 
-Frontend und Backend werden getrennt deployt. Das Frontend laeuft als statischer Vue-Build in Nginx und leitet Backend-Routen im Docker-Netzwerk an den Backend-Container weiter.
+Frontend und Backend werden gemeinsam als eine Anwendung deployt. Damit bleibt das geplante Deployment bei drei Containern.
 
 ## Verantwortlichkeiten
 ### ESP32

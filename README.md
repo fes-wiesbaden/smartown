@@ -13,8 +13,8 @@ IoT-Demostadt mit ESP32, MQTT, Spring Boot, Vue und Live-Steuerung ueber das Web
 [![Data: MariaDB 11.8, Docker](https://img.shields.io/badge/Data-MariaDB%2011.8%20%7C%20Docker-003545?style=for-the-badge&logo=mariadb&logoColor=white)](#techstack)
 [![Firmware: Arduino, ESP32](https://img.shields.io/badge/Firmware-Arduino%20%7C%20ESP32-00979D?style=for-the-badge&logo=arduino&logoColor=white)](#techstack)
 
-[![Total Commits](https://img.shields.io/github/commit-activity/t/fes-wiesbaden/iot-smartown-gruppe-1?style=flat-square)](https://github.com/fes-wiesbaden/iot-smartown-gruppe-1/commits)
-[![Branches](https://img.shields.io/github/branches/fes-wiesbaden/iot-smartown-gruppe-1?style=flat-square)](https://github.com/fes-wiesbaden/iot-smartown-gruppe-1/branches)
+[![Open Issues](https://img.shields.io/github/issues/fes-wiesbaden/iot-smartown-gruppe-1?style=flat-square)](https://github.com/fes-wiesbaden/iot-smartown-gruppe-1/issues)
+[![Closed Issues](https://img.shields.io/github/issues-closed/fes-wiesbaden/iot-smartown-gruppe-1?style=flat-square)](https://github.com/fes-wiesbaden/iot-smartown-gruppe-1/issues?q=is%3Aissue+is%3Aclosed)
 [![Last Commit](https://img.shields.io/github/last-commit/fes-wiesbaden/iot-smartown-gruppe-1/main?style=flat-square)](https://github.com/fes-wiesbaden/iot-smartown-gruppe-1/commits/main)
 [![Stars](https://img.shields.io/github/stars/fes-wiesbaden/iot-smartown-gruppe-1?style=flat-square)](https://github.com/fes-wiesbaden/iot-smartown-gruppe-1/stargazers)
 [![Forks](https://img.shields.io/github/forks/fes-wiesbaden/iot-smartown-gruppe-1?style=flat-square)](https://github.com/fes-wiesbaden/iot-smartown-gruppe-1/network/members)
@@ -35,23 +35,9 @@ Miniatur-"Smarte Stadt" als IoT-Demomodell. Mehrere Bereiche sind mit Sensoren u
 - Visualisierung und Interaktion im Browser
 
 ## Netzwerk
-Statische Adressen fuer das Projekt:
-
-| Geraet | IP-Adresse | Hinweis |
-|---|---|---|
-| Raspberry Pi | 10.93.128.204 | Docker-Host, MQTT-Broker, Backend, Frontend, MariaDB |
-| Reserve | 10.93.128.205 | frei fuer ESP32 oder weiteres Geraet |
-| Reserve | 10.93.128.206 | frei fuer ESP32 oder weiteres Geraet |
-| Reserve | 10.93.128.207 | frei fuer ESP32 oder weiteres Geraet |
-| Reserve | 10.93.128.208 | frei fuer ESP32 oder weiteres Geraet |
-
-Feste Netzparameter fuer alle statischen Geraete:
-
-| Parameter | Wert |
-|---|---|
-| Subnetzmaske | 255.255.240.0 |
-| Gateway | 10.93.128.1 |
-| DNS | 10.93.128.1 |
+| Gerät | IP-Adresse | Subnetzmaske | Gateway | DNS |
+|---|---|---|---|---|
+| Raspberry Pi | 10.93.128.204 | 255.255.240.0 | 10.93.128.1 | 10.93.128.1 |
 
 ## Lokale Entwicklung
 
@@ -71,7 +57,7 @@ cd iot-smartown-gruppe-1
 cp .env.example .env
 ```
 
-Die Datei `.env` enthält lokale Zugangsdaten und wird nicht committet. Vor dem Docker-Start `MQTT_PASSWORD` setzen. Bei Port-Konflikten `MARIADB_PORT`, `MQTT_PORT`, `BACKEND_PORT` oder `FRONTEND_PORT` in `.env` ändern.
+Die Datei `.env` enthält lokale Zugangsdaten und wird nicht committet. Bei Port-Konflikten `MARIADB_PORT` oder `APP_PORT` in `.env` ändern.
 
 ### Lokale Entwicklung starten
 
@@ -103,7 +89,7 @@ npm ci
 npm run dev
 ```
 
-URLs bei lokaler Entwicklung:
+URLs:
 
 | Dienst | URL |
 |---|---|
@@ -111,29 +97,21 @@ URLs bei lokaler Entwicklung:
 | Backend | http://localhost:8080 |
 | Backend Healthcheck | http://localhost:8080/actuator/health |
 | Swagger UI | http://localhost:8080/swagger-ui.html |
-| MQTT Broker | localhost:1883 |
-| MariaDB | localhost:3306 |
+| Docker-App | http://localhost:8081 |
 
 ### Gesamte App per Docker starten
 
-Für Demo oder finalen Betrieb laufen vier Container: MQTT-Broker, MariaDB, Backend und Frontend. Compose baut MQTT, Backend und Frontend selbst. MariaDB nutzt das offizielle Image. Healthchecks erzwingen die Startreihenfolge: MQTT-Broker, MariaDB, Backend, Frontend.
+Für Demo oder finalen Betrieb werden Frontend und Backend zusammen im Compose-Service `app` gebaut. MariaDB läuft im zweiten Service `mariadb`.
 
 ```bash
 docker compose up --build
 ```
 
-URLs bei Docker Compose:
+Danach läuft die App unter:
 
-| Dienst | URL |
-|---|---|
-| Frontend | http://localhost:8081 |
-| Backend | http://localhost:8080 |
-| Backend Healthcheck | http://localhost:8080/actuator/health |
-| Swagger UI | http://localhost:8080/swagger-ui.html |
-| MQTT Broker | localhost:1883 |
-| MariaDB | localhost:3306 |
-
-Wenn Backend oder MariaDB lokal und per Docker gleichzeitig laufen sollen, `BACKEND_PORT` oder `MARIADB_PORT` in `.env` ändern.
+```text
+http://localhost:8081
+```
 
 ### Datenbank zurücksetzen
 
@@ -196,7 +174,7 @@ docker compose down -v
 |---|---|
 | Hardware | ESP32, Sensoren wie BH1750 und Ultraschall, Aktoren wie Stepper, Relais und LEDs |
 | Firmware | Arduino-basierte ESP32-Firmware, liest Sensoren ein, empfängt Befehle per MQTT und setzt Aktoren um |
-| Raspberry Pi | Zentrale Plattform für den Finalbetrieb mit Docker: MQTT-Broker, MariaDB, Spring Boot Backend und Vue-/Nginx-Frontend |
+| Raspberry Pi | Zentrale Plattform für den Finalbetrieb mit Docker: Anwendung mit Spring Boot Backend und Vue-Frontend, MariaDB sowie später MQTT-Broker |
 | Backend | REST-API für Steuerbefehle, MQTT-Subscriber/Publisher, Entscheidungslogik, Speicherung in MariaDB, Weitergabe von Live-Daten per WebSocket |
 | Frontend | Vue-Dashboard für Live-Status, Schalter und Parametrierung wie Schwellwerte |
 | Datenbank | MariaDB zur Speicherung von Zuständen, Konfiguration und optional später Historien |
@@ -206,7 +184,7 @@ docker compose down -v
 2. Hardwaretests laufen direkt per USB-C/USB am Laptop. Sensorik, Aktorik, Flashen und serielle Logs werden lokal getestet. Solange nur die serielle Verbindung genutzt wird, spielen statische IP-Adressen keine Rolle.
 3. Backend, Frontend und Datenbank werden zunächst lokal mit Mock-Daten oder einem kleinen Simulator für Sensorwerte entwickelt.
 4. In der Integrationsphase werden Firmware, MQTT, REST, WebSocket und Hardware schrittweise zusammengeführt. Erst ab der Netzwerkintegration von ESP32 und Raspberry Pi sind statische IP-Adressen relevant.
-5. Im Finalbetrieb läuft die Anwendung dann auf dem Raspberry Pi mit Docker: vier Container für MQTT-Broker, MariaDB, Backend und Frontend.
+5. Im Finalbetrieb läuft die Anwendung dann auf dem Raspberry Pi mit Docker: ein App-Container für Backend und Frontend, ein MariaDB-Container und später ein MQTT-Broker.
 
 ## Entwicklungsregeln Git
 1. Es gibt die Branches `main` und `dev`.
