@@ -57,7 +57,7 @@ cd iot-smartown-gruppe-1
 cp .env.example .env
 ```
 
-Die Datei `.env` enthält lokale Zugangsdaten und wird nicht committet. Bei Port-Konflikten `MARIADB_PORT` oder `APP_PORT` in `.env` ändern.
+Die Datei `.env` enthält lokale Zugangsdaten und wird nicht committet. Vor dem Docker-Start `MQTT_PASSWORD` ändern. Bei Port-Konflikten `MARIADB_PORT`, `MQTT_PORT`, `BACKEND_PORT` oder `APP_PORT` in `.env` ändern.
 
 ### Lokale Entwicklung starten
 
@@ -98,16 +98,17 @@ URLs:
 | Backend Healthcheck | http://localhost:8080/actuator/health |
 | Swagger UI | http://localhost:8080/swagger-ui.html |
 | Docker-App | http://localhost:8081 |
+| MQTT Broker | localhost:1883 |
 
 ### Gesamte App per Docker starten
 
-Für Demo oder finalen Betrieb werden Frontend und Backend zusammen im Compose-Service `app` gebaut. MariaDB läuft im zweiten Service `mariadb`.
+Für Demo oder finalen Betrieb baut Compose die eigenen Images und erzwingt per Healthchecks die Startreihenfolge: MQTT-Broker, MariaDB, Backend, Frontend. MariaDB nutzt das offizielle Image.
 
 ```bash
 docker compose up --build
 ```
 
-Danach läuft die App unter:
+Danach läuft das Frontend unter:
 
 ```text
 http://localhost:8081

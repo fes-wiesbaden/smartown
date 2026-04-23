@@ -12,3 +12,8 @@ spring:
     driver-class-name: org.mariadb.jdbc.Driver
   jpa:
     open-in-view: false
+
+mqtt:
+  broker-url: tcp://${SPRING_MQTT_HOST:localhost}:${SPRING_MQTT_PORT:1883}
+  username: ${SPRING_MQTT_USERNAME:}
+  password: ${SPRING_MQTT_PASSWORD:}
