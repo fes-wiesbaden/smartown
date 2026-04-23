@@ -1,0 +1,16 @@
+.git/
+.idea/
+
+.env
+.env.*
+!.env.example
+
+backend/target/
+backend/.mvn/
+backend/HELP.md
+
+frontend/node_modules/
+frontend/dist/
+frontend/coverage/
+
+**/.DS_Store

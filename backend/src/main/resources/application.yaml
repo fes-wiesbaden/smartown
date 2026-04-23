@@ -1,0 +1,19 @@
+spring:
+  config:
+    import:
+      - optional:file:.env[.properties]
+      - optional:file:../.env[.properties]
+  application:
+    name: backend
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    driver-class-name: org.mariadb.jdbc.Driver
+  jpa:
+    open-in-view: false
+
+mqtt:
+  broker-url: tcp://${SPRING_MQTT_HOST:localhost}:${SPRING_MQTT_PORT:1883}
+  username: ${SPRING_MQTT_USERNAME:}
+  password: ${SPRING_MQTT_PASSWORD:}
