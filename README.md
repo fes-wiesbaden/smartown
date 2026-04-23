@@ -89,7 +89,7 @@ npm ci
 npm run dev
 ```
 
-URLs:
+URLs bei lokaler Entwicklung:
 
 | Dienst | URL |
 |---|---|
@@ -97,8 +97,8 @@ URLs:
 | Backend | http://localhost:8080 |
 | Backend Healthcheck | http://localhost:8080/actuator/health |
 | Swagger UI | http://localhost:8080/swagger-ui.html |
-| Docker-Frontend | http://localhost:8081 |
 | MQTT Broker | localhost:1883 |
+| MariaDB | localhost:3306 |
 
 ### Gesamte App per Docker starten
 
@@ -108,11 +108,18 @@ Für Demo oder finalen Betrieb laufen vier Container: MQTT-Broker, MariaDB, Back
 docker compose up --build
 ```
 
-Danach läuft das Frontend unter:
+URLs bei Docker Compose:
 
-```text
-http://localhost:8081
-```
+| Dienst | URL |
+|---|---|
+| Frontend | http://localhost:8081 |
+| Backend | http://localhost:8080 |
+| Backend Healthcheck | http://localhost:8080/actuator/health |
+| Swagger UI | http://localhost:8080/swagger-ui.html |
+| MQTT Broker | localhost:1883 |
+| MariaDB | localhost:3306 |
+
+Wenn Backend oder MariaDB lokal und per Docker gleichzeitig laufen sollen, `BACKEND_PORT` oder `MARIADB_PORT` in `.env` ändern.
 
 ### Datenbank zurücksetzen
 
