@@ -57,7 +57,7 @@ cd iot-smartown-gruppe-1
 cp .env.example .env
 ```
 
-Die Datei `.env` enthält lokale Zugangsdaten und wird nicht committet. Vor dem Docker-Start `MQTT_PASSWORD` ändern. Bei Port-Konflikten `MARIADB_PORT`, `MQTT_PORT`, `BACKEND_PORT` oder `FRONTEND_PORT` in `.env` ändern.
+Die Datei `.env` enthält lokale Zugangsdaten und wird nicht committet. Vor dem Docker-Start `MQTT_PASSWORD` setzen. Bei Port-Konflikten `MARIADB_PORT`, `MQTT_PORT`, `BACKEND_PORT` oder `FRONTEND_PORT` in `.env` ändern.
 
 ### Lokale Entwicklung starten
 
