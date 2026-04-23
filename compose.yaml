@@ -10,12 +10,6 @@ services:
       - "${MQTT_PORT:?set MQTT_PORT in .env}:1883"
     volumes:
       - smartown-mqtt-data:/mosquitto/data
-    healthcheck:
-      test: ["CMD-SHELL", "mosquitto_sub -h localhost -p 1883 -u \"$${MQTT_USERNAME}\" -P \"$${MQTT_PASSWORD}\" -t '$$SYS/broker/version' -C 1 -W 5 >/dev/null 2>&1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 5s
 
   mariadb:
     image: mariadb:11.8
@@ -31,7 +25,7 @@ services:
       - smartown-mariadb-data:/var/lib/mysql
     depends_on:
       mqtt:
-        condition: service_healthy
+        condition: service_started
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 10s
@@ -56,6 +50,8 @@ services:
     depends_on:
       mariadb:
         condition: service_healthy
+      mqtt:
+        condition: service_started
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:8080/actuator/health"]
       interval: 10s
