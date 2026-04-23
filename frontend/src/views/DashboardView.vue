@@ -1,24 +1,10 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-
-import LanternModeControls from '@/components/lanterns/LanternModeControls.vue'
-import LanternStatusCard from '@/components/lanterns/LanternStatusCard.vue'
-import { useLanterns } from '@/composables/useLanterns'
-
-/**
- * Bindet Snapshot, Live-Status und Moduswechsel in die Dashboard-Ansicht ein.
- */
-const { brokerConnected, error, lanternOnline, loading, setMode, snapshot, submittingMode } = useLanterns()
-
-/**
- * Zeigt den Stand der Stadtmodule, wobei nur die Laternen bereits am MQTT-MVP haengen.
- */
-const modules = computed(() => [
-  { name: 'Skilift', status: 'MVP offen' },
-  { name: 'Bruecke', status: 'MVP offen' },
-  { name: 'Flughafen', status: 'MVP offen' },
-  { name: 'Laternen', status: lanternOnline.value ? 'ESP32 online' : 'Warte auf ESP32' },
-])
+const modules = [
+  { name: 'Skilift', status: 'bereit' },
+  { name: 'Bruecke', status: 'bereit' },
+  { name: 'Flughafen', status: 'bereit' },
+  { name: 'Laternen', status: 'bereit' },
+]
 </script>
 
 <template>
@@ -26,34 +12,16 @@ const modules = computed(() => [
     <header class="dashboard__header">
       <div>
         <p class="dashboard__eyebrow">SmarTown</p>
-        <h1 class="dashboard__title">Kontrollzentrum</h1>
+        <h1>Kontrollzentrum</h1>
       </div>
-      <span class="dashboard__status" :class="{ 'dashboard__status--offline': !brokerConnected }">
-        {{ brokerConnected ? 'MQTT verbunden' : 'MQTT getrennt' }}
-      </span>
+      <span class="dashboard__status">Backend offen</span>
     </header>
 
-    <section class="dashboard__section" aria-label="Stadtmodule">
-      <div class="module-grid">
-        <article v-for="module in modules" :key="module.name" class="module-card">
-          <h2 class="module-card__title">{{ module.name }}</h2>
-          <p class="module-card__status">{{ module.status }}</p>
-        </article>
-      </div>
-    </section>
-
-    <section class="dashboard__section dashboard__section--feature" aria-label="Laternen MQTT MVP">
-      <LanternStatusCard
-        :broker-connected="brokerConnected"
-        :error="error"
-        :loading="loading"
-        :snapshot="snapshot"
-      />
-      <LanternModeControls
-        :current-mode="snapshot?.state.mode ?? null"
-        :submitting-mode="submittingMode"
-        @set-mode="setMode"
-      />
+    <section class="module-grid" aria-label="Stadtmodule">
+      <article v-for="module in modules" :key="module.name" class="module-card">
+        <h2>{{ module.name }}</h2>
+        <p>{{ module.status }}</p>
+      </article>
     </section>
   </main>
 </template>
@@ -83,7 +51,7 @@ const modules = computed(() => [
   text-transform: uppercase;
 }
 
-.dashboard__title {
+h1 {
   margin: 0;
   color: #172026;
   font-size: 2rem;
@@ -100,27 +68,12 @@ const modules = computed(() => [
   font-weight: 700;
 }
 
-.dashboard__status--offline {
-  border-color: #f1d2b6;
-  color: #9a3412;
-  background: #fff2e8;
-}
-
-.dashboard__section {
-  margin: 0 auto 24px;
-  max-width: 1120px;
-}
-
-.dashboard__section--feature {
-  display: grid;
-  grid-template-columns: minmax(0, 1.6fr) minmax(300px, 1fr);
-  gap: 16px;
-}
-
 .module-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 16px;
+  margin: 0 auto;
+  max-width: 1120px;
 }
 
 .module-card {
@@ -130,27 +83,17 @@ const modules = computed(() => [
   background: #ffffff;
 }
 
-.module-card__title {
+.module-card h2 {
   margin: 0 0 8px;
   color: #172026;
   font-size: 1rem;
   font-weight: 800;
 }
 
-.module-card__status {
+.module-card p {
   margin: 0;
   color: #5c6870;
   font-weight: 600;
-}
-
-@media (max-width: 920px) {
-  .dashboard__section--feature {
-    grid-template-columns: 1fr;
-  }
-
-  .module-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 
 @media (max-width: 640px) {
@@ -161,10 +104,6 @@ const modules = computed(() => [
   .dashboard__header {
     align-items: stretch;
     flex-direction: column;
-  }
-
-  .module-grid {
-    grid-template-columns: 1fr;
   }
 }
 </style>

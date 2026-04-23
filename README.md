@@ -26,17 +26,38 @@ IoT-Demostadt mit ESP32, MQTT, Spring Boot, Vue und Live-Steuerung ueber das Web
 ## Überblick
 Miniatur-"Smarte Stadt" als IoT-Demomodell. Mehrere Bereiche sind mit Sensoren und Aktoren ausgestattet und werden über eine Weboberfläche überwacht und gesteuert. Ereignisse lösen automatisierte Abläufe aus, einige Funktionen sind zusätzlich manuell schaltbar. Module sind einzeln testbar und laufen am Ende als Gesamtsystem in einer Live-Demo. Das Projekt soll mit Scrum bearbeitet werden.
 
-## Nachbauen
+## Anforderungen
+
+- Erfassung von Sensordaten über Mikrocontroller und Sensoren
+- Nutzung eines MQTT-Brokers zur Datenübertragung
+- Verarbeitung der Sensordaten mit einer eigenen oder angepassten Anwendung
+- Speicherung der Daten in einer MariaDB-Datenbank
+- Visualisierung und Interaktion im Browser
+
+## Netzwerk
+Statische Adressen fuer das Projekt:
+
+| Geraet | IP-Adresse | Hinweis |
+|---|---|---|
+| Raspberry Pi | 10.93.128.204 | Docker-Host, MQTT-Broker, Backend, Frontend, MariaDB |
+| Reserve | 10.93.128.205 | frei fuer ESP32 oder weiteres Geraet |
+| Reserve | 10.93.128.206 | frei fuer ESP32 oder weiteres Geraet |
+| Reserve | 10.93.128.207 | frei fuer ESP32 oder weiteres Geraet |
+| Reserve | 10.93.128.208 | frei fuer ESP32 oder weiteres Geraet |
+
+Feste Netzparameter fuer alle statischen Geraete:
+
+| Parameter | Wert |
+|---|---|
+| Subnetzmaske | 255.255.240.0 |
+| Gateway | 10.93.128.1 |
+| DNS | 10.93.128.1 |
+
+## Lokale Entwicklung
 
 ### Voraussetzungen
-
-Nachbauen nur mit Docker:
-
 - Git
 - Docker mit Docker Compose
-
-Für lokale Entwicklung ohne Backend-/Frontend-Container zusaetzlich:
-
 - Java 21
 - Node.js 20.19 oder 22.12+
 
@@ -54,10 +75,10 @@ Die Datei `.env` enthält lokale Zugangsdaten und wird nicht committet. Vor dem 
 
 ### Lokale Entwicklung starten
 
-MQTT-Broker und MariaDB laufen lokal per Docker:
+MariaDB läuft lokal per Docker:
 
 ```bash
-docker compose up -d mqtt mariadb
+docker compose up -d mariadb
 ```
 
 Backend lokal starten:
@@ -97,11 +118,8 @@ URLs bei lokaler Entwicklung:
 
 Für Demo oder finalen Betrieb laufen vier Container: MQTT-Broker, MariaDB, Backend und Frontend. Compose baut MQTT, Backend und Frontend selbst. MariaDB nutzt das offizielle Image. Healthchecks erzwingen die Startreihenfolge: MQTT-Broker, MariaDB, Backend, Frontend.
 
-**Alle Ports müssen frei sein!**
-
-Ports: **1883; 3306; 8080; 8081;**
 ```bash
-docker compose up --build -d
+docker compose up --build
 ```
 
 URLs bei Docker Compose:
@@ -115,41 +133,15 @@ URLs bei Docker Compose:
 | MQTT Broker | localhost:1883 |
 | MariaDB | localhost:3306 |
 
-### Lokale Compose-Umgebung vollständig löschen
+Wenn Backend oder MariaDB lokal und per Docker gleichzeitig laufen sollen, `BACKEND_PORT` oder `MARIADB_PORT` in `.env` ändern.
 
-Nur ausführen, wenn alle lokalen Docker-Compose-Daten und Images dieses Projekts gelöscht werden dürfen.
+### Datenbank zurücksetzen
+
+Nur ausführen, wenn lokale Daten gelöscht werden dürfen:
+
 ```bash
-docker compose down -v --rmi all 
+docker compose down -v
 ```
-
-## Anforderungen
-
-- Erfassung von Sensordaten über Mikrocontroller und Sensoren
-- Nutzung eines MQTT-Brokers zur Datenübertragung
-- Verarbeitung der Sensordaten mit einer eigenen oder angepassten Anwendung
-- Speicherung der Daten in einer MariaDB-Datenbank
-- Visualisierung und Interaktion im Browser
-
-## Netzwerk
-Statische Adressen fuer das Projekt:
-
-| Geraet | IP-Adresse | Hinweis |
-|---|---|---|
-| Raspberry Pi | 10.93.128.204 | Docker-Host, MQTT-Broker, Backend, Frontend, MariaDB |
-| Reserve | 10.93.128.205 | frei fuer ESP32 oder weiteres Geraet |
-| Reserve | 10.93.128.206 | frei fuer ESP32 oder weiteres Geraet |
-| Reserve | 10.93.128.207 | frei fuer ESP32 oder weiteres Geraet |
-| Reserve | 10.93.128.208 | frei fuer ESP32 oder weiteres Geraet |
-
-Feste Netzparameter fuer alle statischen Geraete:
-
-| Parameter | Wert |
-|---|---|
-| Subnetzmaske | 255.255.240.0 |
-| Gateway | 10.93.128.1 |
-| DNS | 10.93.128.1 |
-
-
 
 ## Vorhandene Hardware
 - 3x DC 5V Stepper Motor 28BYJ-48 mit Treiberboard
@@ -167,6 +159,11 @@ Feste Netzparameter fuer alle statischen Geraete:
 - 1x BH1750
 
 ## Muss-Funktionen
+
+### Skilift
+- Über das Frontend ein-/ausschaltbar
+- Statusanzeige (oben / unten)
+- Step Motor DC Motor, welcher durchgängig schnur zieht und Skilift herumschiebt.
 
 ### Brücke
 - **Sensor 1 (vor der Brücke):** erkennt anfahrendes Boot → Brücke fährt hoch
@@ -197,24 +194,19 @@ Feste Netzparameter fuer alle statischen Geraete:
 ## Architektur (grob)
 | Schicht | Inhalt |
 |---|---|
-| Hardware | Drei ESP32, Sensoren wie BH1750 und Ultraschall, Aktoren wie Stepper, Relais und LEDs |
-| Firmware | Arduino-basierte ESP32-Firmware pro Modul, liest Sensoren ein, empfängt Befehle per MQTT und setzt Aktoren um |
+| Hardware | ESP32, Sensoren wie BH1750 und Ultraschall, Aktoren wie Stepper, Relais und LEDs |
+| Firmware | Arduino-basierte ESP32-Firmware, liest Sensoren ein, empfängt Befehle per MQTT und setzt Aktoren um |
 | Raspberry Pi | Zentrale Plattform für den Finalbetrieb mit Docker: MQTT-Broker, MariaDB, Spring Boot Backend und Vue-/Nginx-Frontend |
 | Backend | REST-API für Steuerbefehle, MQTT-Subscriber/Publisher, Entscheidungslogik, Speicherung in MariaDB, Weitergabe von Live-Daten per WebSocket |
 | Frontend | Vue-Dashboard für Live-Status, Schalter und Parametrierung wie Schwellwerte |
 | Datenbank | MariaDB zur Speicherung von Zuständen, Konfiguration und optional später Historien |
 
 ## Entwicklungsworkflow
-1. Das Projekt nutzt drei ESP32 mit klarer Modultrennung. Ein Sketch laeuft immer genau auf einem ESP32.
+1. Während der Entwicklung können mehrere ESP32 parallel genutzt werden. Im finalen Produkt wird nur ein ESP32 eingesetzt.
 2. Hardwaretests laufen direkt per USB-C/USB am Laptop. Sensorik, Aktorik, Flashen und serielle Logs werden lokal getestet. Solange nur die serielle Verbindung genutzt wird, spielen statische IP-Adressen keine Rolle.
 3. Backend, Frontend und Datenbank werden zunächst lokal mit Mock-Daten oder einem kleinen Simulator für Sensorwerte entwickelt.
 4. In der Integrationsphase werden Firmware, MQTT, REST, WebSocket und Hardware schrittweise zusammengeführt. Erst ab der Netzwerkintegration von ESP32 und Raspberry Pi sind statische IP-Adressen relevant.
 5. Im Finalbetrieb läuft die Anwendung dann auf dem Raspberry Pi mit Docker: vier Container für MQTT-Broker, MariaDB, Backend und Frontend.
-
-Aktuelle Modulaufteilung:
-- ESP32 1: Laternen in der Stadt
-- ESP32 2: Flughafen mit Laternen und Ultraschallwellensensor
-- ESP32 3: klappbare Bruecke
 
 ## Entwicklungsregeln Git
 1. Es gibt die Branches `main` und `dev`.
@@ -225,10 +217,10 @@ Aktuelle Modulaufteilung:
 6. Erst wenn der Stand auf `dev` gemeinsam geprüft und vereinheitlicht wurde, wird von `dev` nach `main` gemergt.
 
 ## Datenfluss
-1. Sensoren liefern Messwerte an den jeweils zustaendigen ESP32.
-2. Jeder ESP32 sendet Zustaende und Sensordaten per MQTT an den Raspberry Pi.
+1. Sensoren liefern Messwerte an den ESP32.
+2. Der ESP32 sendet Zustände und Sensordaten per MQTT an den Raspberry Pi.
 3. Das Spring Boot Backend verarbeitet die MQTT-Nachrichten, trifft die Fachentscheidungen und speichert relevante Daten in der MariaDB.
 4. Das Backend überträgt Live-Daten per WebSocket an das Vue-Frontend.
 5. Steuerbefehle und Konfigurationsänderungen aus dem Frontend gehen per REST an das Backend.
-6. Das Backend sendet die resultierenden Steuerbefehle per MQTT an das passende Modul-Topic des zustaendigen ESP32.
-7. Der jeweilige ESP32 setzt die Aktion um und meldet den neuen Status erneut per MQTT zurück.
+6. Das Backend sendet die resultierenden Steuerbefehle per MQTT an den ESP32.
+7. Der ESP32 setzt die Aktion um und meldet den neuen Status erneut per MQTT zurück.

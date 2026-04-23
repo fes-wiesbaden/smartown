@@ -38,20 +38,20 @@ Regeln:
 - neue Libraries werden nicht stillschweigend global vorausgesetzt, sondern im `sketch.yaml` des Sketches eingetragen
 - reale Zugangsdaten gehoeren nur in lokale `secrets.h` Dateien
 - Fachlogik bleibt im Backend, der ESP32 setzt Commands um und meldet Zustaende
-- ein Sketch entspricht genau einem ESP32-Modul
-- das Projekt nutzt aktuell drei ESP32-Module: Stadtlaternen, Flughafen und klappbare Bruecke
 
 ## sketch.yaml
 `sketch.yaml` ist Pflicht. Arduino IDE ignoriert die Datei, Arduino CLI nutzt sie fuer reproduzierbare Builds. Darin stehen mindestens:
 - Board
+- Port
+- Protokoll
 - benoetigte Plattformen
 - benoetigte Libraries
-
-Port und Protokoll koennen lokal gesetzt werden. Sie muessen nicht fest im Repo stehen.
 
 Beispiel:
 ```yaml
 default_fqbn: esp32:esp32:esp32
+default_port: /dev/ttyUSB0
+default_protocol: serial
 default_profile: dev
 
 profiles:
@@ -62,6 +62,10 @@ profiles:
     libraries:
       - ArduinoJson (7.4.3)
       - PubSubClient (2.8.0)
+    port: /dev/ttyUSB0
+    protocol: serial
+    port_config:
+      baudrate: "115200"
 ```
 
 ## secrets.h
@@ -108,13 +112,6 @@ arduino-cli compile <SKETCH_ORDNER>
 arduino-cli upload -p /dev/ttyUSB0 --fqbn esp32:esp32:esp32 <SKETCH_ORDNER>
 ```
 12. MQTT-Nachrichten gegen Broker pruefen.
-
-Aktuelle Projektaufteilung:
-- `Laternen`: eigener ESP32 fuer die Stadtlaternen
-- `Flughafen`: eigener ESP32 fuer Flughafenlaternen und Ultraschallwellensensor
-- `Bruecke`: eigener ESP32 fuer die klappbare Bruecke
-
-Das Backend adressiert diese Module spaeter ueber eigene MQTT-Topic-Bereiche wie `smartown/lanterns/...`, `smartown/airport/...` und `smartown/bridge/...`.
 
 ## MQTT-Test
 State abonnieren:

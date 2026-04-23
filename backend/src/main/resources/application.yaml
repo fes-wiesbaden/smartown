@@ -17,7 +17,3 @@ mqtt:
   broker-url: tcp://${SPRING_MQTT_HOST:localhost}:${SPRING_MQTT_PORT:1883}
   username: ${SPRING_MQTT_USERNAME:}
   password: ${SPRING_MQTT_PASSWORD:}
-
-smartown:
-  mqtt:
-    enabled: ${SMARTOWN_MQTT_ENABLED:true}

@@ -1,5 +1,3 @@
-# notwendig zum flashen über arduino cli
-
 default_fqbn: esp32:esp32:esp32
 default_port: /dev/ttyUSB0
 default_profile: dev
