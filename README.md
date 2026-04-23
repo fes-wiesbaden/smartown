@@ -35,9 +35,23 @@ Miniatur-"Smarte Stadt" als IoT-Demomodell. Mehrere Bereiche sind mit Sensoren u
 - Visualisierung und Interaktion im Browser
 
 ## Netzwerk
-| Gerät | IP-Adresse | Subnetzmaske | Gateway | DNS |
-|---|---|---|---|---|
-| Raspberry Pi | 10.93.128.204 | 255.255.240.0 | 10.93.128.1 | 10.93.128.1 |
+Statische Adressen fuer das Projekt:
+
+| Geraet | IP-Adresse | Hinweis |
+|---|---|---|
+| Raspberry Pi | 10.93.128.204 | Docker-Host, MQTT-Broker, Backend, Frontend, MariaDB |
+| Reserve | 10.93.128.205 | frei fuer ESP32 oder weiteres Geraet |
+| Reserve | 10.93.128.206 | frei fuer ESP32 oder weiteres Geraet |
+| Reserve | 10.93.128.207 | frei fuer ESP32 oder weiteres Geraet |
+| Reserve | 10.93.128.208 | frei fuer ESP32 oder weiteres Geraet |
+
+Feste Netzparameter fuer alle statischen Geraete:
+
+| Parameter | Wert |
+|---|---|
+| Subnetzmaske | 255.255.240.0 |
+| Gateway | 10.93.128.1 |
+| DNS | 10.93.128.1 |
 
 ## Lokale Entwicklung
 
