@@ -3,3 +3,5 @@
 .env
 .env.*
 !.env.example
+firmware/**/secrets.h
+!firmware/Esp32MqttBase/secrets.h
