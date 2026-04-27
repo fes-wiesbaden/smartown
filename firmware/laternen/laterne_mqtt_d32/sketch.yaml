@@ -1,0 +1,11 @@
+default_fqbn: esp32:esp32:esp32
+default_profile: dev
+
+profiles:
+  dev:
+    fqbn: esp32:esp32:esp32
+    platforms:
+      - platform: esp32:esp32 (3.3.8)
+    libraries:
+      - ArduinoJson (7.4.2)
+      - PubSubClient (2.8.0)
