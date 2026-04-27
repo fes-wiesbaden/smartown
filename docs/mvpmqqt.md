@@ -62,25 +62,31 @@ Der Sketch:
 ## Mehrere Logiken auf dem ESP32
 Ein ESP32 kann nicht mehrere getrennte Arduino-Sketches gleichzeitig ausfuehren. Auf dem Board laeuft immer genau ein geflashtes Firmware-Image.
 
-Fuer euer Projekt bedeutet das:
+Aktuelle Projektentscheidung:
+
+- ESP32 1: Laternen in der Stadt
+- ESP32 2: Flughafen mit Laternen und Ultraschallwellensensor
+- ESP32 3: klappbare Bruecke
+
+Fuer das Projekt bedeutet das:
 
 - `firmware/laternen/laternen_mqtt_mvp/` ist aktuell die eigene Firmware fuer das Laternen-MVP.
 - `firmware/brueckensteuerung/`, `firmware/laternen/helligkeitssteuerung_test/` und `firmware/Esp32MqttBase/` sind getrennte Sketche bzw. Test- oder Basisstaende.
 - Diese Sketche laufen nicht parallel auf demselben ESP32.
 
-Wenn spaeter mehrere Fachlogiken wie Laternen, Bruecke, Skilift und Flughafenlichter auf einem einzigen ESP32 laufen sollen, muessen sie in eine gemeinsame Firmware integriert werden, zum Beispiel mit:
-
-- getrennten Modulen oder Klassen pro Fachbereich
-- gemeinsamem `setup()` und `loop()`
-- eigener Topic-Struktur pro Modul, zum Beispiel `smartown/lanterns/...`, `smartown/bridge/...`, `smartown/skilift/...`
-
-Die einfachere Architektur ist meist:
+Die beschlossene Architektur ist:
 
 - ein ESP32 pro Fachmodul
 - eine eigene Firmware pro Modul
 - klare MQTT-Topics pro Modul
 
-Fuer den aktuellen MVP ist genau das sinnvoll: Laternen zuerst als eigenstaendige Firmware sauber durchziehen und die anderen Module spaeter separat anbinden.
+Beispiel fuer die Topic-Struktur:
+
+- `smartown/lanterns/...`
+- `smartown/airport/...`
+- `smartown/bridge/...`
+
+Der aktuelle MVP setzt davon zuerst das Modul `Laternen` um. Die anderen Module werden nach demselben Muster angebunden.
 
 ## MQTT Topics
 - `smartown/lanterns/command`

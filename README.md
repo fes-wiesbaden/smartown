@@ -194,19 +194,24 @@ docker compose down -v
 ## Architektur (grob)
 | Schicht | Inhalt |
 |---|---|
-| Hardware | ESP32, Sensoren wie BH1750 und Ultraschall, Aktoren wie Stepper, Relais und LEDs |
-| Firmware | Arduino-basierte ESP32-Firmware, liest Sensoren ein, empfängt Befehle per MQTT und setzt Aktoren um |
+| Hardware | Drei ESP32, Sensoren wie BH1750 und Ultraschall, Aktoren wie Stepper, Relais und LEDs |
+| Firmware | Arduino-basierte ESP32-Firmware pro Modul, liest Sensoren ein, empfängt Befehle per MQTT und setzt Aktoren um |
 | Raspberry Pi | Zentrale Plattform für den Finalbetrieb mit Docker: MQTT-Broker, MariaDB, Spring Boot Backend und Vue-/Nginx-Frontend |
 | Backend | REST-API für Steuerbefehle, MQTT-Subscriber/Publisher, Entscheidungslogik, Speicherung in MariaDB, Weitergabe von Live-Daten per WebSocket |
 | Frontend | Vue-Dashboard für Live-Status, Schalter und Parametrierung wie Schwellwerte |
 | Datenbank | MariaDB zur Speicherung von Zuständen, Konfiguration und optional später Historien |
 
 ## Entwicklungsworkflow
-1. Während der Entwicklung können mehrere ESP32 parallel genutzt werden. Im finalen Produkt wird nur ein ESP32 eingesetzt.
+1. Das Projekt nutzt drei ESP32 mit klarer Modultrennung. Ein Sketch laeuft immer genau auf einem ESP32.
 2. Hardwaretests laufen direkt per USB-C/USB am Laptop. Sensorik, Aktorik, Flashen und serielle Logs werden lokal getestet. Solange nur die serielle Verbindung genutzt wird, spielen statische IP-Adressen keine Rolle.
 3. Backend, Frontend und Datenbank werden zunächst lokal mit Mock-Daten oder einem kleinen Simulator für Sensorwerte entwickelt.
 4. In der Integrationsphase werden Firmware, MQTT, REST, WebSocket und Hardware schrittweise zusammengeführt. Erst ab der Netzwerkintegration von ESP32 und Raspberry Pi sind statische IP-Adressen relevant.
 5. Im Finalbetrieb läuft die Anwendung dann auf dem Raspberry Pi mit Docker: vier Container für MQTT-Broker, MariaDB, Backend und Frontend.
+
+Aktuelle Modulaufteilung:
+- ESP32 1: Laternen in der Stadt
+- ESP32 2: Flughafen mit Laternen und Ultraschallwellensensor
+- ESP32 3: klappbare Bruecke
 
 ## Entwicklungsregeln Git
 1. Es gibt die Branches `main` und `dev`.
@@ -217,10 +222,10 @@ docker compose down -v
 6. Erst wenn der Stand auf `dev` gemeinsam geprüft und vereinheitlicht wurde, wird von `dev` nach `main` gemergt.
 
 ## Datenfluss
-1. Sensoren liefern Messwerte an den ESP32.
-2. Der ESP32 sendet Zustände und Sensordaten per MQTT an den Raspberry Pi.
+1. Sensoren liefern Messwerte an den jeweils zustaendigen ESP32.
+2. Jeder ESP32 sendet Zustaende und Sensordaten per MQTT an den Raspberry Pi.
 3. Das Spring Boot Backend verarbeitet die MQTT-Nachrichten, trifft die Fachentscheidungen und speichert relevante Daten in der MariaDB.
 4. Das Backend überträgt Live-Daten per WebSocket an das Vue-Frontend.
 5. Steuerbefehle und Konfigurationsänderungen aus dem Frontend gehen per REST an das Backend.
-6. Das Backend sendet die resultierenden Steuerbefehle per MQTT an den ESP32.
-7. Der ESP32 setzt die Aktion um und meldet den neuen Status erneut per MQTT zurück.
+6. Das Backend sendet die resultierenden Steuerbefehle per MQTT an das passende Modul-Topic des zustaendigen ESP32.
+7. Der jeweilige ESP32 setzt die Aktion um und meldet den neuen Status erneut per MQTT zurück.
