@@ -90,6 +90,7 @@ Das erste konkrete MQTT-Schema fuer das Modul `Laternen` ist in [mqtt/laternen.m
 
 Weitere MQTT-Dokumente:
 - [mqtt/bruecke.md](mqtt/bruecke.md)
+- [mqtt/skilift.md](mqtt/skilift.md)
 - [mqtt/flughafen.md](mqtt/flughafen.md)
 
 Kurz:
