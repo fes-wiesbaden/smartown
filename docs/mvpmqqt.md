@@ -68,7 +68,7 @@ Aktuelle Projektentscheidung:
 - ESP32 2: Flughafen mit Laternen und Ultraschallwellensensor
 - ESP32 3: klappbare Bruecke
 
-Fuer euer Projekt bedeutet das:
+Fuer das Projekt bedeutet das:
 
 - `firmware/laternen/laternen_mqtt_mvp/` ist aktuell die eigene Firmware fuer das Laternen-MVP.
 - `firmware/brueckensteuerung/`, `firmware/laternen/helligkeitssteuerung_test/` und `firmware/Esp32MqttBase/` sind getrennte Sketche bzw. Test- oder Basisstaende.
