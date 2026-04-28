@@ -19,18 +19,18 @@ IoT-Demostadt mit ESP32, MQTT, Spring Boot, Vue und Live-Steuerung ueber das Web
 [![Stars](https://img.shields.io/github/stars/fes-wiesbaden/iot-smartown-gruppe-1?style=flat-square)](https://github.com/fes-wiesbaden/iot-smartown-gruppe-1/stargazers)
 [![Forks](https://img.shields.io/github/forks/fes-wiesbaden/iot-smartown-gruppe-1?style=flat-square)](https://github.com/fes-wiesbaden/iot-smartown-gruppe-1/network/members)
 
-[Überblick](#überblick) • [Anforderungen](#anforderungen) • [Netzwerk](#netzwerk) • [Lokale Entwicklung](#lokale-entwicklung) • [Vorhandene Hardware](#vorhandene-hardware) • [Muss-Funktionen](#muss-funktionen) • [Meilensteine](#meilensteine) • [Architektur](#architektur-grob) • [Entwicklungsworkflow](#entwicklungsworkflow) • [Entwicklungsregeln Git](#entwicklungsregeln-git) • [Datenfluss](#datenfluss)
+[Überblick](#überblick) • [Einrichtung](#einrichtung) • [Anforderungen](#anforderungen) • [Netzwerk](#netzwerk) • [Vorhandene Hardware](#vorhandene-hardware) • [Muss-Funktionen](#muss-funktionen) • [Meilensteine](#meilensteine) • [Architektur](#architektur-grob) • [Entwicklungsworkflow](#entwicklungsworkflow) • [Entwicklungsregeln Git](#entwicklungsregeln-git) • [Datenfluss](#datenfluss)
 
 </div>
 
 ## Überblick
 Miniatur-"Smarte Stadt" als IoT-Demomodell. Mehrere Bereiche sind mit Sensoren und Aktoren ausgestattet und werden über eine Weboberfläche überwacht und gesteuert. Ereignisse lösen automatisierte Abläufe aus, einige Funktionen sind zusätzlich manuell schaltbar. Module sind einzeln testbar und laufen am Ende als Gesamtsystem in einer Live-Demo. Das Projekt soll mit Scrum bearbeitet werden.
 
-## Nachbauen
+## Einrichtung
 
 ### Voraussetzungen
 
-Nachbauen nur mit Docker:
+Einrichtung nur mit Docker:
 
 - Git
 - Docker mit Docker Compose
@@ -40,8 +40,6 @@ Für lokale Entwicklung ohne Backend-/Frontend-Container zusaetzlich:
 - Java 21
 - Node.js 20.19 oder 22.12+
 
-Danach abmelden und neu anmelden. Die `docker`-Gruppe hat weitreichende Rechte, deshalb nur eigene Entwickler-Accounts hinzufügen.
-
 ### Projekt kopieren
 
 ```bash
@@ -49,8 +47,6 @@ git clone https://github.com/fes-wiesbaden/iot-smartown-gruppe-1.git
 cd iot-smartown-gruppe-1
 cp .env.example .env
 ```
-
-Die Datei `.env` enthält lokale Zugangsdaten und wird nicht committet. Vor dem Docker-Start `MQTT_PASSWORD` setzen. Bei Port-Konflikten `MARIADB_PORT`, `MQTT_PORT`, `BACKEND_PORT` oder `FRONTEND_PORT` in `.env` ändern.
 
 ### Lokale Entwicklung starten
 
