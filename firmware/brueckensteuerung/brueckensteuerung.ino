@@ -1,8 +1,8 @@
 #include <Stepper.h>
 
 const int STEPS_PER_REVOLUTION = 2048;
-const int STEP_ANGLE = 300;
-const int MOTOR_SPEED_RPM = 3;
+const int STEP_ANGLE = 512;
+const int MOTOR_SPEED_RPM = 10;
 const unsigned long SENSOR_TIMEOUT_US = 30000;
 const unsigned long LOCK_DURATION_MS = 3000;
 const unsigned long SENSOR_SETTLE_DELAY_MS = 30;
@@ -13,8 +13,8 @@ const int ECHO_1_PIN = 3;
 const int TRIG_2_PIN = 4;
 const int ECHO_2_PIN = 5;
 
-const float MIN_DISTANCE_CM = 1.0;
-const float MAX_DISTANCE_CM = 4.5;
+const float MIN_DISTANCE_CM = 5.0;
+const float MAX_DISTANCE_CM = 8.0;
 
 Stepper bridgeMotor(STEPS_PER_REVOLUTION, 8, 10, 9, 11);
 
