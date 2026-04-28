@@ -8,5 +8,4 @@ constexpr uint16_t MQTT_PORT = 1883;
 constexpr char MQTT_USERNAME[] = "smartown";
 constexpr char MQTT_PASSWORD[] = "replace-with-mqtt-password";
 
-constexpr char MQTT_CLIENT_ID[] = "esp32-lantern-1";
-constexpr float THRESHOLD_LUX = 50.0f;
+constexpr char MQTT_CLIENT_ID[] = "esp32-lantern-d32-1";
