@@ -91,4 +91,35 @@ describe('DashboardView', () => {
       }),
     )
   })
+
+  /**
+   * Prueft, dass ein offline gemeldeter ESP32 nicht weiter als online angezeigt wird.
+   */
+  it('renders the esp32 as offline when the snapshot says offline', async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        state: {
+          mode: 'AUTO',
+          lightState: 'OFF',
+          lux: null,
+          online: false,
+          thresholdLux: 50,
+        },
+        lastEvent: {
+          type: 'SYSTEM_START',
+          lightState: 'OFF',
+          reason: 'SYSTEM_START',
+        },
+        brokerConnected: true,
+        updatedAt: '2026-04-23T09:00:00Z',
+      }),
+    })
+
+    const wrapper = mount(DashboardView)
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('ESP32 offline')
+    expect(wrapper.text()).not.toContain('ESP32 online')
+  })
 })
