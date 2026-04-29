@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 
 import BridgeModeControls from '@/components/bridge/BridgeModeControls.vue'
+import BridgeStatusCard from '@/components/bridge/BridgeStatusCard.vue'
 import LanternModeControls from '@/components/lanterns/LanternModeControls.vue'
 import LanternStatusCard from '@/components/lanterns/LanternStatusCard.vue'
 import { useBridge } from '@/composables/useBridge'
@@ -11,7 +12,7 @@ import { useLanterns } from '@/composables/useLanterns'
  * Bindet Snapshot, Live-Status und Moduswechsel in die Dashboard-Ansicht ein.
  */
 const { brokerConnected, error, lanternOnline, loading, setMode, snapshot, submittingMode } = useLanterns()
-const { bridgeMode, submittingBridgeMode, setBridgeMode } = useBridge()
+const { bridgeMode, submittingBridgeMode, setBridgeMode, snapshot: bridgeSnapshot, loading: bridgeLoading, error: bridgeError, brokerConnected: bridgeBroker, bridgeOnline } = useBridge()
 
 /**
  * Zeigt den Stand der Stadtmodule, wobei nur die Laternen bereits am MQTT-MVP haengen.
@@ -59,6 +60,16 @@ const modules = computed(() => [
         :current-mode="snapshot?.state.mode ?? null"
         :submitting-mode="submittingMode"
         @set-mode="setMode"
+      />
+    </section>
+
+    <section class="dashboard__section dashboard__section--feature" aria-label="Brücken MQTT MVP">
+      <BridgeStatusCard
+        :broker-connected="bridgeBroker"
+        :bridge-online="bridgeOnline"
+        :error="bridgeError"
+        :loading="bridgeLoading"
+        :snapshot="bridgeSnapshot"
       />
       <BridgeModeControls
         :current-mode="bridgeMode"

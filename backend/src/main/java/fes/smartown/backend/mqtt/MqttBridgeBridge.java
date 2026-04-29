@@ -17,6 +17,7 @@ public class MqttBridgeBridge extends AbstractMqttBridge implements BridgeComman
 
     private static final String EVENT_TOPIC = "smartown/bridge/event";
     private static final String COMMAND_TOPIC = "smartown/bridge/command";
+    private static final String STATE_TOPIC = "smartown/bridge/state";
 
     private final BridgeStateService bridgeStateService;
 
@@ -30,26 +31,27 @@ public class MqttBridgeBridge extends AbstractMqttBridge implements BridgeComman
 
     @Override
     public void publishCommand(String command) {
-        // Das Backend sendet "OPEN" oder "CLOSE"
         publish(COMMAND_TOPIC, command);
     }
 
     @Override
     protected void subscribeTopics(MqttClient mqttClient) throws MqttException {
         mqttClient.subscribe(EVENT_TOPIC, 1);
+        mqttClient.subscribe(STATE_TOPIC, 1);
     }
 
     @Override
     protected void handleMessage(String topic, String payload) {
         if (EVENT_TOPIC.equals(topic)) {
-            // Falls Jackson Strings mit Anführungszeichen versieht ("..."), diese entfernen
             String cleanPayload = payload.replace("\"", "").trim();
             bridgeStateService.handleEvent(cleanPayload);
+        } else if (STATE_TOPIC.equals(topic)) {
+            bridgeStateService.handleHeartbeat();
         }
     }
 
     @Override
     protected void onBrokerConnectionChanged(boolean brokerConnected) {
-        // Hier könnte der Status später für das Frontend gespeichert werden
+        bridgeStateService.updateBrokerConnection(brokerConnected);
     }
 }

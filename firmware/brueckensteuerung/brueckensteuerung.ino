@@ -106,6 +106,13 @@ void loop() {
   ensureMqttConnected();
   mqttClient.loop();
 
+  // Heartbeat alle 10 Sekunden
+  static unsigned long lastHeartbeatMs = 0;
+  if (millis() - lastHeartbeatMs > 10000) {
+    mqttClient.publish("smartown/bridge/state", "ONLINE");
+    lastHeartbeatMs = millis();
+  }
+
   // Vermeide spammen von Events an den Broker
   if (millis() - lastEventMs < EVENT_COOLDOWN_MS) {
     return;

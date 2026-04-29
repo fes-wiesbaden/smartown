@@ -12,8 +12,8 @@ const emit = defineEmits<{
 
 const modes: Array<{ value: BridgeMode; label: string; description: string }> = [
   { value: 'AUTO', label: 'Auto', description: 'Sensoren steuern die Brücke automatisch.' },
-  { value: 'MANUAL_OPEN', label: 'Hochfahren', description: 'Brücke wird sicher hochgefahren (max. 1x).' },
-  { value: 'MANUAL_CLOSE', label: 'Runterfahren', description: 'Brücke wird sicher runtergefahren (max. 1x).' },
+  { value: 'MANUAL_OPEN', label: 'Hoch', description: 'Brücke wird sicher hochgefahren (max. 1x).' },
+  { value: 'MANUAL_CLOSE', label: 'Runter', description: 'Brücke wird sicher runtergefahren (max. 1x).' },
 ]
 </script>
 
