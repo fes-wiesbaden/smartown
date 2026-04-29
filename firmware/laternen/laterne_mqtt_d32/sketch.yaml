@@ -1,7 +1,4 @@
-# notwendig zum flashen über arduino cli
-
 default_fqbn: esp32:esp32:esp32
-default_port: /dev/ttyUSB0
 default_profile: dev
 
 profiles:
@@ -10,8 +7,5 @@ profiles:
     platforms:
       - platform: esp32:esp32 (3.3.8)
     libraries:
+      - ArduinoJson (7.4.2)
       - PubSubClient (2.8.0)
-    port: /dev/ttyUSB0
-    protocol: serial
-    port_config:
-      baudrate: "115200"

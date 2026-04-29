@@ -6,7 +6,7 @@
 Dieses Dokument konkretisiert die aktuell getroffenen Architekturentscheidungen fuer das Projekt SmarTown. Es beschreibt die Systemgrenzen, den technischen Aufbau, den ersten fachlichen Fokus und offene Punkte.
 
 ## Systemkontext
-Das System steuert und ueberwacht ein physisches Smart-City-Demomodell. Sensorwerte kommen von einem ESP32. Fachentscheidungen werden im Backend getroffen. Das Frontend visualisiert Live-Daten und erlaubt manuelle Eingriffe. Die Kommunikation zwischen zentralen Komponenten laeuft ueber MQTT, REST und WebSocket.
+Das System steuert und ueberwacht ein physisches Smart-City-Demomodell. Sensorwerte kommen von drei ESP32-Modulen. Fachentscheidungen werden im Backend getroffen. Das Frontend visualisiert Live-Daten und erlaubt manuelle Eingriffe. Die Kommunikation zwischen zentralen Komponenten laeuft ueber MQTT, REST und WebSocket.
 
 ## Technologiestack
 - Firmware: Arduino auf ESP32
@@ -33,6 +33,11 @@ Frontend und Backend werden getrennt deployt. Das Frontend laeuft als statischer
 - Empfaengt MQTT-Commands
 - Setzt Aktoren physisch um
 - Sendet State- und Event-Nachrichten
+
+Aktuelle Projektentscheidung:
+- ESP32 1: Laternen in der Stadt
+- ESP32 2: Flughafen mit Laternen und Ultraschallwellensensor
+- ESP32 3: klappbare Bruecke
 
 ### Backend
 - Zentrale Fachlogik
@@ -79,36 +84,41 @@ Ziel:
 - Sofort sichtbare Statusaenderungen
 
 ### MQTT
-MQTT ist die Verbindung zwischen Backend und ESP32.
+MQTT ist die Verbindung zwischen Backend und den drei ESP32-Modulen.
 
 Das erste konkrete MQTT-Schema fuer das Modul `Laternen` ist in [mqtt/laternen.md](mqtt/laternen.md) dokumentiert.
 
 Weitere MQTT-Dokumente:
 - [mqtt/bruecke.md](mqtt/bruecke.md)
-- [mqtt/skilift.md](mqtt/skilift.md)
 - [mqtt/flughafen.md](mqtt/flughafen.md)
 
 Kurz:
-- `command`: Backend -> ESP32
+- `command`: Backend -> passender ESP32
 - `state`: ESP32 -> Backend
 - `event`: fachliche Ereignisse fuer Nachvollziehbarkeit
 
+Die Zuordnung erfolgt ueber modulbezogene Topics, nicht ueber direkte IP-Kommunikation vom Backend zum ESP32.
+Beispiele:
+- `smartown/lanterns/command`
+- `smartown/airport/command`
+- `smartown/bridge/command`
+
 ## Datenfluss
-1. Ein Sensor liefert Messwerte an den ESP32.
+1. Ein Sensor liefert Messwerte an den zustaendigen ESP32.
 2. Der ESP32 sendet die Rohdaten oder den aktuellen Zustand per MQTT an das Backend.
 3. Das Backend bewertet die Daten anhand der Fachregeln.
-4. Falls noetig sendet das Backend ein Command per MQTT an den ESP32.
-5. Der ESP32 setzt den Aktorzustand um.
+4. Falls noetig sendet das Backend ein Command per MQTT an das passende Modul-Topic.
+5. Der zustaendige ESP32 setzt den Aktorzustand um.
 6. Der ESP32 meldet den neuen State zurueck.
 7. Das Backend aktualisiert Persistenz und Live-Status.
 8. Das Frontend erhaelt den neuen Zustand per WebSocket.
 
 ## Entwicklungsworkflow
-1. Hardware und Firmware werden lokal mit direkt angeschlossenem ESP32 getestet.
-2. Waehrend der Entwicklung koennen mehrere ESP32 parallel verwendet werden.
+1. Hardware und Firmware werden lokal per USB an den jeweiligen ESP32 geflasht und getestet.
+2. Das Projekt setzt auf drei ESP32 mit getrennter Modulverantwortung.
 3. Backend und Frontend werden zuerst mit Mock-Daten oder Simulatoren entwickelt.
 4. Danach folgt die schrittweise Integration mit MQTT, REST, WebSocket und echter Hardware.
-5. Im finalen Produkt wird nur ein ESP32 verwendet.
+5. Im Finalbetrieb bleiben die drei ESP32 als getrennte Module erhalten.
 
 ## Offene Architekturentscheidungen
 - Konkreter numerischer Schwellwert fuer den BH1750

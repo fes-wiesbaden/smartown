@@ -8,6 +8,8 @@ import fes.smartown.backend.lanterns.model.LightState;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
+import java.time.Instant;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -47,5 +49,28 @@ class LanternStateServiceTest {
         verify(realtimeService, times(2)).broadcast(captor.capture());
         assertThat(captor.getAllValues()).hasSize(2);
         assertThat(captor.getAllValues().getLast().lastEvent().reason()).isEqualTo(LanternReason.LOW_LUX);
+    }
+
+    @Test
+    /**
+     * Erwartet, dass der ESP32 nach ausbleibenden Meldungen automatisch als offline markiert wird.
+     */
+    void marksEsp32OfflineAfterHeartbeatTimeout() {
+        LanternRealtimeService realtimeService = mock(LanternRealtimeService.class);
+        LanternStateService lanternStateService = new LanternStateService(realtimeService);
+        Instant firstStateAt = Instant.parse("2026-04-29T10:15:00Z");
+
+        lanternStateService.handleState(new LanternStatePayload(
+                LanternMode.AUTO,
+                LightState.ON,
+                14.5,
+                true,
+                50.0
+        ), firstStateAt);
+
+        lanternStateService.expireStaleDeviceIfNecessary(firstStateAt.plus(LanternStateService.DEVICE_OFFLINE_TIMEOUT).plusSeconds(1));
+
+        assertThat(lanternStateService.getSnapshot().state().online()).isFalse();
+        verify(realtimeService, times(2)).broadcast(org.mockito.ArgumentMatchers.any());
     }
 }
