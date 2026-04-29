@@ -33,6 +33,7 @@ public class MqttLanternBridge extends AbstractMqttBridge implements LanternComm
 
     private final LanternStateService lanternStateService;
 
+    @org.springframework.beans.factory.annotation.Autowired
     public MqttLanternBridge(MqttProperties properties,
                              LanternStateService lanternStateService,
                              ObjectMapper objectMapper) {
