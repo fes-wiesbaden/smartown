@@ -17,7 +17,10 @@ const modules = computed(() => [
   { name: 'Skilift', status: 'MVP offen' },
   { name: 'Bruecke', status: 'MVP offen' },
   { name: 'Flughafen', status: 'MVP offen' },
-  { name: 'Laternen', status: lanternOnline.value ? 'ESP32 online' : 'Warte auf ESP32' },
+  {
+    name: 'Laternen',
+    status: !snapshot.value ? 'Warte auf ESP32' : lanternOnline.value ? 'ESP32 online' : 'ESP32 offline',
+  },
 ])
 </script>
 
