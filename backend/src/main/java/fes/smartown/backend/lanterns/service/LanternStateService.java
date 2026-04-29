@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public class LanternStateService {
 
-    static final Duration DEVICE_OFFLINE_TIMEOUT = Duration.ofSeconds(15);
+    static final Duration DEVICE_OFFLINE_TIMEOUT = Duration.ofSeconds(30);
 
     private final LanternRealtimeService lanternRealtimeService;
     private final AtomicReference<LanternSnapshot> snapshotReference = new AtomicReference<>(defaultSnapshot());
@@ -91,7 +91,7 @@ public class LanternStateService {
     /**
      * Markiert einen stillen ESP32 nach Ablauf des Heartbeat-Timeouts als offline.
      */
-    @Scheduled(fixedDelay = 1000)
+    @Scheduled(fixedDelay = 15000)
     void expireStaleDeviceIfNecessary() {
         expireStaleDeviceIfNecessary(Instant.now());
     }
