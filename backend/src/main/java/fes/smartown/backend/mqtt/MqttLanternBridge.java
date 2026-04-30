@@ -10,6 +10,7 @@ import fes.smartown.backend.lanterns.service.LanternCommandPublisher;
 import fes.smartown.backend.lanterns.service.LanternStateService;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
