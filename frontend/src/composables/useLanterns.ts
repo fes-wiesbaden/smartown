@@ -20,7 +20,6 @@ export function useLanterns() {
 
   const brokerConnected = computed(() => snapshot.value?.brokerConnected ?? false)
   const lanternOnline = computed(() => snapshot.value?.state.online ?? false)
-  const liveConnected = computed(() => websocket.value !== null)
 
   /**
    * Laedt den zuletzt bekannten Snapshot einmal per REST.
@@ -63,17 +62,7 @@ export function useLanterns() {
         throw new Error(`Mode update failed with status ${response.status}`)
       }
 
-      // Das Backend bestaetigt den Command sofort, der echte Zielzustand kommt aber asynchron per WebSocket.
-      // Deshalb darf ein alter REST-Snapshot den gerade geklickten Modus nicht wieder auf AUTO zuruecksetzen.
-      if (snapshot.value) {
-        snapshot.value = {
-          ...snapshot.value,
-          state: {
-            ...snapshot.value.state,
-            mode,
-          },
-        }
-      }
+      snapshot.value = (await response.json()) as LanternSnapshot
     } catch (requestError) {
       error.value = requestError instanceof Error ? requestError.message : 'Mode update failed'
     } finally {
@@ -142,7 +131,6 @@ export function useLanterns() {
   return {
     brokerConnected,
     error,
-    liveConnected,
     lanternOnline,
     loading,
     setMode,

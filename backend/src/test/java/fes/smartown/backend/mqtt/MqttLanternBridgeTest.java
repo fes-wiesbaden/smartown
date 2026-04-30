@@ -75,7 +75,7 @@ class MqttLanternBridgeTest {
         when(mqttClient.isConnected()).thenReturn(true);
         MqttLanternBridge bridge = bridge(lanternStateService, mqttClient, reconnectExecutor);
 
-        bridge.publishModeCommand(LanternMode.OFF);
+        bridge.publishModeCommand(LanternMode.FORCED_OFF);
 
         verify(mqttClient).connect(any());
         verify(mqttClient).subscribe("smartown/lanterns/state", 1);
@@ -90,7 +90,7 @@ class MqttLanternBridgeTest {
                 LanternCommandPayload.class
         );
         assertThat(payload.action()).isEqualTo("SET_MODE");
-        assertThat(payload.mode()).isEqualTo(LanternMode.OFF);
+        assertThat(payload.mode()).isEqualTo(LanternMode.FORCED_OFF);
     }
 
     @Test

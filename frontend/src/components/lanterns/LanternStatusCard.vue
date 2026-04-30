@@ -7,25 +7,21 @@ import type { LanternSnapshot } from '@/types/lanterns'
  * Enthalten den letzten Snapshot plus Lade- und Fehlerzustand fuer die Statuskarte.
  */
 const props = defineProps<{
+  brokerConnected: boolean
   error: string | null
   loading: boolean
   snapshot: LanternSnapshot | null
 }>()
 
 /**
- * Macht den technischen Modus im UI lesbar.
+ * Formatiert den Online-Status des ESP32 fuer die Oberflaeche.
  */
-const modeLabel = computed(() => {
-  const mode = props.snapshot?.state.mode
-  if (!mode) {
-    return '-'
+const onlineLabel = computed(() => {
+  if (!props.snapshot) {
+    return 'Warte auf Daten'
   }
 
-  if (mode === 'AUTO') {
-    return 'Auto'
-  }
-
-  return mode === 'ON' ? 'An' : 'Aus'
+  return props.snapshot.state.online ? 'ESP32 online' : 'ESP32 offline'
 })
 
 /**
@@ -61,7 +57,15 @@ const thresholdLabel = computed(() => {
     <div class="status-card__header">
       <div>
         <p class="status-card__eyebrow">Laternen</p>
-        <h2 id="lantern-status-title" class="status-card__title">Laternenstatus</h2>
+        <h2 id="lantern-status-title" class="status-card__title">MQTT Status</h2>
+      </div>
+      <div class="status-card__badges">
+        <span class="status-card__badge" :class="{ 'status-card__badge--online': brokerConnected }">
+          {{ brokerConnected ? 'Broker verbunden' : 'Broker getrennt' }}
+        </span>
+        <span class="status-card__badge" :class="{ 'status-card__badge--online': snapshot?.state.online }">
+          {{ onlineLabel }}
+        </span>
       </div>
     </div>
 
@@ -71,7 +75,7 @@ const thresholdLabel = computed(() => {
     <div v-if="snapshot" class="status-card__grid">
       <article class="status-card__item">
         <span class="status-card__label">Modus</span>
-        <strong class="status-card__value">{{ modeLabel }}</strong>
+        <strong class="status-card__value">{{ snapshot.state.mode }}</strong>
       </article>
       <article class="status-card__item">
         <span class="status-card__label">Licht</span>
@@ -101,11 +105,10 @@ const thresholdLabel = computed(() => {
 .status-card {
   display: grid;
   gap: 20px;
-  border: 1px solid var(--theme-card-border);
-  border-radius: 14px;
+  border: 1px solid #d9e0e2;
+  border-radius: 8px;
   padding: 24px;
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 16px 40px rgba(96, 53, 250, 0.08);
+  background: #ffffff;
 }
 
 .status-card__header {
@@ -117,7 +120,7 @@ const thresholdLabel = computed(() => {
 
 .status-card__eyebrow {
   margin: 0 0 4px;
-  color: var(--theme-accent);
+  color: #357266;
   font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -130,9 +133,32 @@ const thresholdLabel = computed(() => {
   font-weight: 800;
 }
 
+.status-card__badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.status-card__badge {
+  border: 1px solid #d8dfe2;
+  border-radius: 999px;
+  padding: 6px 10px;
+  color: #5c6870;
+  background: #f5f7f8;
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.status-card__badge--online {
+  border-color: #bad4ca;
+  color: #1f5f4b;
+  background: #e8f4ee;
+}
+
 .status-card__notice {
   margin: 0;
-  color: var(--theme-muted);
+  color: #5c6870;
   font-weight: 600;
 }
 
@@ -149,14 +175,14 @@ const thresholdLabel = computed(() => {
 .status-card__item {
   display: grid;
   gap: 6px;
-  border: 1px solid var(--theme-surface-border);
-  border-radius: 10px;
+  border: 1px solid #eef2f4;
+  border-radius: 8px;
   padding: 16px;
-  background: var(--theme-surface);
+  background: #f8fafb;
 }
 
 .status-card__label {
-  color: var(--theme-muted);
+  color: #5c6870;
   font-size: 0.8125rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -171,6 +197,10 @@ const thresholdLabel = computed(() => {
 @media (max-width: 840px) {
   .status-card__header {
     flex-direction: column;
+  }
+
+  .status-card__badges {
+    justify-content: flex-start;
   }
 
   .status-card__grid {

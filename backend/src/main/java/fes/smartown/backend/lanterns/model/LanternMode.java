@@ -1,10 +1,10 @@
 package fes.smartown.backend.lanterns.model;
 
 /**
- * Unterstuetzte Betriebsmodi der sensorbasierten Laternensteuerung.
+ * Unterstuetzte Betriebsmodi der Laternen im MVP.
  */
 public enum LanternMode {
     AUTO,
-    ON,
-    OFF
+    FORCED_ON,
+    FORCED_OFF
 }

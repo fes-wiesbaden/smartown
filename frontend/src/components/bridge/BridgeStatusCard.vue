@@ -5,6 +5,7 @@ defineProps<{
   snapshot: BridgeSnapshot | null
   loading: boolean
   error: string | null
+  brokerConnected: boolean
   bridgeOnline: boolean
 }>()
 </script>
@@ -14,14 +15,22 @@ defineProps<{
     <div class="status-card__header">
       <div>
         <p class="status-card__eyebrow">Brücke</p>
-        <h2 id="bridge-status-title" class="status-card__title">Brückenstatus</h2>
+        <h2 id="bridge-status-title" class="status-card__title">MQTT Status</h2>
       </div>
-      <div v-if="loading" class="status-card__badge status-card__badge--loading">Lädt…</div>
+      <div v-if="loading" class="status-card__badge status-card__badge--loading">Lädt...</div>
       <div v-else-if="error" class="status-card__badge status-card__badge--error">Fehler</div>
       <div v-else class="status-card__badge status-card__badge--success">Aktiv</div>
     </div>
 
     <dl class="status-list">
+      <div class="status-list__item">
+        <dt class="status-list__term">MQTT Broker</dt>
+        <dd class="status-list__value">
+          <span class="status-indicator" :class="brokerConnected ? 'status-indicator--on' : 'status-indicator--off'"></span>
+          {{ brokerConnected ? 'Verbunden' : 'Getrennt' }}
+        </dd>
+      </div>
+
       <div class="status-list__item">
         <dt class="status-list__term">Brücke (ESP32)</dt>
         <dd class="status-list__value">
@@ -32,8 +41,8 @@ defineProps<{
       
       <div class="status-list__item">
         <dt class="status-list__term">Aktueller Zustand</dt>
-        <dd class="status-list__value status-list__value--highlight">
-          {{ snapshot?.isPhysicallyOpen ? 'OBEN' : 'UNTEN' }}
+        <dd class="status-list__value" style="font-weight: bold; color: #357266;">
+          {{ snapshot?.isPhysicallyOpen ? 'GEÖFFNET' : 'GESCHLOSSEN' }}
         </dd>
       </div>
     </dl>
@@ -45,11 +54,10 @@ defineProps<{
   display: flex;
   flex-direction: column;
   gap: 20px;
-  border: 1px solid var(--theme-card-border);
-  border-radius: 14px;
+  border: 1px solid #d9e0e2;
+  border-radius: 8px;
   padding: 24px;
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 16px 40px rgba(96, 53, 250, 0.08);
+  background: #ffffff;
 }
 
 .status-card__header {
@@ -60,7 +68,7 @@ defineProps<{
 
 .status-card__eyebrow {
   margin: 0 0 4px;
-  color: var(--theme-accent);
+  color: #357266;
   font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -82,18 +90,18 @@ defineProps<{
 }
 
 .status-card__badge--loading {
-  color: var(--theme-muted);
+  color: #5c6870;
   background: #f5f7f8;
 }
 
 .status-card__badge--error {
-  color: var(--theme-offline);
-  background: var(--theme-offline-bg);
+  color: #9a3412;
+  background: #fff2e8;
 }
 
 .status-card__badge--success {
-  color: var(--theme-accent-strong);
-  background: var(--theme-accent-soft);
+  color: #1f5f4b;
+  background: #e8f4ee;
 }
 
 .status-list {
@@ -116,7 +124,7 @@ defineProps<{
 }
 
 .status-list__term {
-  color: var(--theme-muted);
+  color: #5c6870;
   font-size: 0.875rem;
   font-weight: 600;
 }
@@ -131,11 +139,6 @@ defineProps<{
   font-weight: 700;
 }
 
-.status-list__value--highlight {
-  font-weight: 800;
-  color: var(--theme-accent);
-}
-
 .status-indicator {
   display: inline-block;
   width: 8px;
@@ -144,10 +147,10 @@ defineProps<{
 }
 
 .status-indicator--on {
-  background: #16a34a;
+  background: #357266;
 }
 
 .status-indicator--off {
-  background: #dc2626;
+  background: #d8dfe2;
 }
 </style>

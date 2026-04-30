@@ -21,7 +21,6 @@ import java.util.concurrent.atomic.AtomicReference;
 public class LanternStateService {
 
     static final Duration DEVICE_OFFLINE_TIMEOUT = Duration.ofSeconds(30);
-    static final double DEFAULT_THRESHOLD_LUX = 50.0;
 
     private final LanternRealtimeService lanternRealtimeService;
     private final AtomicReference<LanternSnapshot> snapshotReference = new AtomicReference<>(defaultSnapshot());
@@ -159,7 +158,7 @@ public class LanternStateService {
                 LightState.OFF,
                 null,
                 false,
-                DEFAULT_THRESHOLD_LUX
+                null
         );
         LanternEventPayload defaultEvent = new LanternEventPayload(
                 "SYSTEM_START",

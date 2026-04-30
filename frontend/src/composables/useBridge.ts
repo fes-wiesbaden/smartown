@@ -20,7 +20,6 @@ export function useBridge() {
 
   const brokerConnected = computed(() => snapshot.value?.brokerConnected ?? false)
   const bridgeOnline = computed(() => snapshot.value?.espOnline ?? false)
-  const liveConnected = computed(() => websocket.value !== null)
 
   /**
    * Holt den Initialzustand einmal per REST, bevor Live-Updates uebernehmen.
@@ -130,5 +129,5 @@ export function useBridge() {
     websocket.value = null
   })
 
-  return { bridgeMode, submittingBridgeMode, setBridgeMode, snapshot, loading, error, brokerConnected, bridgeOnline, liveConnected }
+  return { bridgeMode, submittingBridgeMode, setBridgeMode, snapshot, loading, error, brokerConnected, bridgeOnline }
 }
