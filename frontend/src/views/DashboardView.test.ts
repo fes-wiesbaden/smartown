@@ -1,33 +1,33 @@
 import { flushPromises, mount } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import DashboardView from './DashboardView.vue'
-
 const fetchMock = vi.fn()
+const lanternSnapshot = {
+  state: {
+    mode: 'AUTO',
+    lightState: 'ON',
+    lux: 12.5,
+    online: true,
+    thresholdLux: 50,
+  },
+  lastEvent: {
+    type: 'LIGHT_STATE_CHANGED',
+    lightState: 'ON',
+    reason: 'LOW_LUX',
+  },
+  brokerConnected: true,
+  updatedAt: '2026-04-23T09:00:00Z',
+}
+const bridgeSnapshot = {
+  mode: 'AUTO',
+  isPhysicallyOpen: false,
+  brokerConnected: true,
+  espOnline: true,
+  updatedAt: '2026-04-23T09:00:00Z',
+}
 
-/**
- * Einfache Test-Doppelklasse fuer Live-Updates ohne echten Browser-Socket.
- */
-class MockWebSocket {
-  static instances: MockWebSocket[] = []
-
-  url: string
-  onmessage: ((event: MessageEvent<string>) => void) | null = null
-  onerror: (() => void) | null = null
-  onclose: (() => void) | null = null
-  readyState = 1
-
-  constructor(url: string) {
-    this.url = url
-    MockWebSocket.instances.push(this)
-  }
-
-  /**
-   * Simuliert ein geordnetes Schliessen der Verbindung im Test.
-   */
-  close() {
-    this.onclose?.()
-  }
+async function loadDashboardView() {
+  return (await import('./DashboardView.vue')).default
 }
 
 describe('DashboardView', () => {
@@ -35,28 +35,19 @@ describe('DashboardView', () => {
    * Stubt REST und WebSocket fuer jeden Testlauf deterministisch neu.
    */
   beforeEach(() => {
-    fetchMock.mockResolvedValue({
+    fetchMock.mockImplementation(async (input: string) => ({
       ok: true,
-      json: async () => ({
-        state: {
-          mode: 'AUTO',
-          lightState: 'ON',
-          lux: 12.5,
-          online: true,
-          thresholdLux: 50,
-        },
-        lastEvent: {
-          type: 'LIGHT_STATE_CHANGED',
-          lightState: 'ON',
-          reason: 'LOW_LUX',
-        },
-        brokerConnected: true,
-        updatedAt: '2026-04-23T09:00:00Z',
-      }),
-    })
+      json: async () => {
+        if (input === '/api/bridge') {
+          return bridgeSnapshot
+        }
+        if (input === '/api/bridge/mode') {
+          return null
+        }
+        return lanternSnapshot
+      },
+    }))
     vi.stubGlobal('fetch', fetchMock)
-    vi.stubGlobal('WebSocket', MockWebSocket)
-    MockWebSocket.instances = []
   })
 
   /**
@@ -69,16 +60,20 @@ describe('DashboardView', () => {
   /**
    * Prueft, dass das Dashboard den Snapshot rendert und Moduswechsel per REST ausloest.
    */
-  it('renders the live lantern status and sends mode updates', async () => {
+  it('renders both live modules and sends mode updates', async () => {
+    const DashboardView = await loadDashboardView()
     const wrapper = mount(DashboardView)
     await flushPromises()
 
     expect(wrapper.text()).toContain('Kontrollzentrum')
     expect(wrapper.text()).toContain('Laternen')
+    expect(wrapper.text()).toContain('Brücke')
     expect(wrapper.text()).toContain('ESP32 online')
     expect(wrapper.text()).toContain('12.5 lx')
+    expect(wrapper.text()).toContain('GESCHLOSSEN')
 
     await wrapper.get('button').trigger('click')
+    await flushPromises()
 
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/lanterns',
@@ -90,31 +85,33 @@ describe('DashboardView', () => {
         body: JSON.stringify({ mode: 'AUTO' }),
       }),
     )
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/bridge',
+    )
   })
 
   /**
    * Prueft, dass ein offline gemeldeter ESP32 nicht weiter als online angezeigt wird.
    */
   it('renders the esp32 as offline when the snapshot says offline', async () => {
-    fetchMock.mockResolvedValueOnce({
+    const DashboardView = await loadDashboardView()
+    fetchMock.mockImplementationOnce(async () => ({
       ok: true,
       json: async () => ({
+        ...lanternSnapshot,
         state: {
-          mode: 'AUTO',
+          ...lanternSnapshot.state,
           lightState: 'OFF',
           lux: null,
           online: false,
-          thresholdLux: 50,
         },
         lastEvent: {
           type: 'SYSTEM_START',
           lightState: 'OFF',
           reason: 'SYSTEM_START',
         },
-        brokerConnected: true,
-        updatedAt: '2026-04-23T09:00:00Z',
       }),
-    })
+    }))
 
     const wrapper = mount(DashboardView)
     await flushPromises()

@@ -18,9 +18,8 @@ const { bridgeMode, submittingBridgeMode, setBridgeMode, snapshot: bridgeSnapsho
  * Zeigt den Stand der Stadtmodule, wobei nur die Laternen bereits am MQTT-MVP haengen.
  */
 const modules = computed(() => [
-  { name: 'Skilift', status: 'MVP offen' },
-  { name: 'Bruecke', status: 'MVP offen' },
-  { name: 'Flughafen', status: 'MVP offen' },
+  { name: 'Bruecke', status: 'Offen' },
+  { name: 'Flughafen', status: 'Offen' },
   {
     name: 'Laternen',
     status: !snapshot.value ? 'Warte auf ESP32' : lanternOnline.value ? 'ESP32 online' : 'ESP32 offline',
@@ -49,7 +48,7 @@ const modules = computed(() => [
       </div>
     </section>
 
-    <section class="dashboard__section dashboard__section--feature" aria-label="Laternen MQTT MVP">
+    <section class="dashboard__section dashboard__section--feature" aria-label="Laternen MQTT">
       <LanternStatusCard
         :broker-connected="brokerConnected"
         :error="error"
@@ -63,7 +62,7 @@ const modules = computed(() => [
       />
     </section>
 
-    <section class="dashboard__section dashboard__section--feature" aria-label="Brücken MQTT MVP">
+    <section class="dashboard__section dashboard__section--feature" aria-label="Brücken MQTT">
       <BridgeStatusCard
         :broker-connected="bridgeBroker"
         :bridge-online="bridgeOnline"
