@@ -44,6 +44,7 @@ public class BridgeStateService {
 
     public synchronized void setMode(BridgeMode mode) {
         this.currentMode = mode;
+        this.currentState = BridgeState.IDLE; // Reset state machine on mode change
         if (mode == BridgeMode.MANUAL_OPEN) {
             openBridgeSafely();
         } else if (mode == BridgeMode.MANUAL_CLOSE) {
