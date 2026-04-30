@@ -14,9 +14,9 @@ spring:
     open-in-view: false
 
 mqtt:
-  broker-url: tcp://${SPRING_MQTT_HOST:${MQTT_HOST:localhost}}:${SPRING_MQTT_PORT:${MQTT_PORT:1883}}
-  username: ${SPRING_MQTT_USERNAME:${MQTT_USERNAME:}}
-  password: ${SPRING_MQTT_PASSWORD:${MQTT_PASSWORD:}}
+  broker-url: tcp://${SPRING_MQTT_HOST:localhost}:${SPRING_MQTT_PORT:1883}
+  username: ${SPRING_MQTT_USERNAME:}
+  password: ${SPRING_MQTT_PASSWORD:}
 
 smartown:
   mqtt:

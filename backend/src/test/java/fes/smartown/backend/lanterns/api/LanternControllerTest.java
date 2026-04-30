@@ -70,12 +70,12 @@ class LanternControllerTest {
 
         mockMvc.perform(put("/api/lanterns/mode")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(java.util.Map.of("mode", "OFF"))))
+                        .content(objectMapper.writeValueAsString(java.util.Map.of("mode", "FORCED_OFF"))))
                 .andExpect(status().isAccepted());
 
         ArgumentCaptor<LanternMode> captor = ArgumentCaptor.forClass(LanternMode.class);
         verify(lanternCommandPublisher).publishModeCommand(captor.capture());
-        assertThat(captor.getValue()).isEqualTo(LanternMode.OFF);
+        assertThat(captor.getValue()).isEqualTo(LanternMode.FORCED_OFF);
     }
 
     @Test
@@ -85,11 +85,11 @@ class LanternControllerTest {
     void returnsServiceUnavailableWhenMqttCommandFails() throws Exception {
         doThrow(new IllegalStateException("MQTT broker unavailable"))
                 .when(lanternCommandPublisher)
-                .publishModeCommand(LanternMode.ON);
+                .publishModeCommand(LanternMode.FORCED_ON);
 
         mockMvc.perform(put("/api/lanterns/mode")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(java.util.Map.of("mode", "ON"))))
+                        .content(objectMapper.writeValueAsString(java.util.Map.of("mode", "FORCED_ON"))))
                 .andExpect(status().isServiceUnavailable());
     }
 

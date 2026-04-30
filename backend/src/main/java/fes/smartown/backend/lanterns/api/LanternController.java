@@ -18,7 +18,7 @@ import org.springframework.web.server.ResponseStatusException;
 @RestController
 @RequestMapping("/api/lanterns")
 /**
- * Stellt Snapshot und Moduswechsel fuer die sensorbasierten Laternen per REST bereit.
+ * Stellt Snapshot und Moduswechsel fuer den Laternen-MVP per REST bereit.
  */
 public class LanternController {
 

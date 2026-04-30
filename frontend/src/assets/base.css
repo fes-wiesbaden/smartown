@@ -1,18 +1,6 @@
 :root {
   color: #172026;
-  background: #f6f3ff;
-  --theme-accent: #6035fa;
-  --theme-accent-strong: #4c2bc8;
-  --theme-accent-soft: #efe9ff;
-  --theme-accent-border: #cdc0ff;
-  --theme-muted: #5c6870;
-  --theme-card-border: #d9e0e2;
-  --theme-card-bg: #ffffff;
-  --theme-surface: #f8f5ff;
-  --theme-surface-border: #ece6ff;
-  --theme-offline: #9a3412;
-  --theme-offline-bg: #fff2e8;
-  --theme-offline-border: #f1d2b6;
+  background: #f5f7f8;
   font-family:
     Inter,
     -apple-system,

@@ -22,13 +22,13 @@ void setup() {
   Serial.println(" lx");
 }
 
-void laternenAus() {
+void laternenAn() {
   for (int i = 0; i <= 15; i++) {
     pwm.setPWM(i, 0, 4095);
   }
 }
 
-void laternenAn() {
+void laternenAus() {
   for (int i = 0; i <= 15; i++) {
     pwm.setPWM(i, 0, 0);
   }

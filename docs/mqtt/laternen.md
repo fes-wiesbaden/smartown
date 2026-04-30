@@ -51,12 +51,12 @@ Dieses Dokument beschreibt das erste MQTT-Schema fuer das Modul `Laternen`.
 - `lux`: aktuell gemessener Helligkeitswert des BH1750
 - `online`: zeigt, ob der ESP32 aktuell erreichbar ist
 - `reason`: Grund fuer ein Ereignis oder einen Zustandswechsel
-- `thresholdLux`: aktuell genutzter Schwellwert fuer den Modus `AUTO`
+- `thresholdLux`: konfigurierbarer Schwellwert fuer den Modus `AUTO`
 
 ## Bedeutung der Werte
-- `AUTO`: der ESP32 schaltet die Laternen anhand des Helligkeitswerts lokal
-- `ON`: Laternen bleiben manuell eingeschaltet
-- `OFF`: Laternen bleiben manuell ausgeschaltet
+- `AUTO`: Backend schaltet die Laternen anhand des Helligkeitswerts
+- `FORCED_ON`: Laternen bleiben manuell eingeschaltet
+- `FORCED_OFF`: Laternen bleiben manuell ausgeschaltet
 - `ON`: Licht ist aktuell an
 - `OFF`: Licht ist aktuell aus
 - `LOW_LUX`: Umschaltung oder Pruefung wegen Dunkelheit
@@ -65,11 +65,10 @@ Dieses Dokument beschreibt das erste MQTT-Schema fuer das Modul `Laternen`.
 - `SYSTEM_START`: Ereignis beim Start oder Neustart
 
 ## Erlaubte Werte
-- `mode`: `AUTO`, `ON`, `OFF`
+- `mode`: `AUTO`, `FORCED_ON`, `FORCED_OFF`
 - `lightState`: `ON`, `OFF`
 - `reason`: `LOW_LUX`, `HIGH_LUX`, `MANUAL_OVERRIDE`, `SYSTEM_START`
 
 ## Hinweise
 - `mode` und `lightState` sind bewusst getrennt. `AUTO` beschreibt die Steuerlogik, `ON` oder `OFF` den realen Lampenzustand.
-- Der ESP32 nutzt aktuell fest `50 lx` als Schwellwert und sendet diesen Wert im State mit.
-- Nach einem MQTT-Reconnect startet der Laternen-ESP32 bewusst wieder in `AUTO`.
+- `thresholdLux` ist Teil der Konfiguration, auch wenn es im ersten Minimalbeispiel oben noch nicht auftaucht.

@@ -7,25 +7,21 @@ import type { LanternSnapshot } from '@/types/lanterns'
  * Enthalten den letzten Snapshot plus Lade- und Fehlerzustand fuer die Statuskarte.
  */
 const props = defineProps<{
+  brokerConnected: boolean
   error: string | null
   loading: boolean
   snapshot: LanternSnapshot | null
 }>()
 
 /**
- * Macht den technischen Modus im UI lesbar.
+ * Formatiert den Online-Status des ESP32 fuer die Oberflaeche.
  */
-const modeLabel = computed(() => {
-  const mode = props.snapshot?.state.mode
-  if (!mode) {
-    return '-'
+const onlineLabel = computed(() => {
+  if (!props.snapshot) {
+    return 'Warte auf Daten'
   }
 
-  if (mode === 'AUTO') {
-    return 'Auto'
-  }
-
-  return mode === 'ON' ? 'An' : 'Aus'
+  return props.snapshot.state.online ? 'ESP32 online' : 'ESP32 offline'
 })
 
 /**
@@ -40,14 +36,20 @@ const lightLabel = computed(() => {
 })
 
 /**
+ * Formatiert den zuletzt gemeldeten Luxwert mit Einheit.
+ */
+const luxLabel = computed(() => {
+  const lux = props.snapshot?.state.lux
+  return lux === null || lux === undefined ? '-' : `${lux.toFixed(1)} lx`
+})
+
+/**
  * Formatiert den aktuell gemeldeten Schwellwert mit Einheit.
  */
 const thresholdLabel = computed(() => {
   const threshold = props.snapshot?.state.thresholdLux
   return threshold === null || threshold === undefined ? '-' : `${threshold.toFixed(1)} lx`
 })
-
-const lanternConnectionLabel = computed(() => (props.snapshot?.state.online ? 'Online' : 'Offline'))
 </script>
 
 <template>
@@ -55,16 +57,16 @@ const lanternConnectionLabel = computed(() => (props.snapshot?.state.online ? 'O
     <div class="status-card__header">
       <div>
         <p class="status-card__eyebrow">Laternen</p>
-        <h2 id="lantern-status-title" class="status-card__title">Laternenstatus</h2>
+        <h2 id="lantern-status-title" class="status-card__title">MQTT-MVP Status</h2>
       </div>
-      <p class="status-card__connection">
-        <span
-          class="status-card__connection-dot"
-          :class="snapshot?.state.online ? 'status-card__connection-dot--online' : 'status-card__connection-dot--offline'"
-          aria-hidden="true"
-        ></span>
-        {{ lanternConnectionLabel }}
-      </p>
+      <div class="status-card__badges">
+        <span class="status-card__badge" :class="{ 'status-card__badge--online': brokerConnected }">
+          {{ brokerConnected ? 'Broker verbunden' : 'Broker getrennt' }}
+        </span>
+        <span class="status-card__badge" :class="{ 'status-card__badge--online': snapshot?.state.online }">
+          {{ onlineLabel }}
+        </span>
+      </div>
     </div>
 
     <p v-if="loading" class="status-card__notice">Snapshot wird geladen.</p>
@@ -73,15 +75,27 @@ const lanternConnectionLabel = computed(() => (props.snapshot?.state.online ? 'O
     <div v-if="snapshot" class="status-card__grid">
       <article class="status-card__item">
         <span class="status-card__label">Modus</span>
-        <strong class="status-card__value">{{ modeLabel }}</strong>
+        <strong class="status-card__value">{{ snapshot.state.mode }}</strong>
       </article>
       <article class="status-card__item">
         <span class="status-card__label">Licht</span>
         <strong class="status-card__value">{{ lightLabel }}</strong>
       </article>
       <article class="status-card__item">
+        <span class="status-card__label">Lux</span>
+        <strong class="status-card__value">{{ luxLabel }}</strong>
+      </article>
+      <article class="status-card__item">
         <span class="status-card__label">Schwellwert</span>
         <strong class="status-card__value">{{ thresholdLabel }}</strong>
+      </article>
+      <article class="status-card__item">
+        <span class="status-card__label">Letztes Event</span>
+        <strong class="status-card__value">{{ snapshot.lastEvent.type }}</strong>
+      </article>
+      <article class="status-card__item">
+        <span class="status-card__label">Grund</span>
+        <strong class="status-card__value">{{ snapshot.lastEvent.reason }}</strong>
       </article>
     </div>
   </section>
@@ -90,13 +104,11 @@ const lanternConnectionLabel = computed(() => (props.snapshot?.state.online ? 'O
 <style scoped>
 .status-card {
   display: grid;
-  height: 100%;
   gap: 20px;
-  border: 1px solid var(--theme-card-border);
-  border-radius: 14px;
+  border: 1px solid #d9e0e2;
+  border-radius: 8px;
   padding: 24px;
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 16px 40px rgba(96, 53, 250, 0.08);
+  background: #ffffff;
 }
 
 .status-card__header {
@@ -108,7 +120,7 @@ const lanternConnectionLabel = computed(() => (props.snapshot?.state.online ? 'O
 
 .status-card__eyebrow {
   margin: 0 0 4px;
-  color: var(--theme-accent);
+  color: #357266;
   font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -121,19 +133,32 @@ const lanternConnectionLabel = computed(() => (props.snapshot?.state.online ? 'O
   font-weight: 800;
 }
 
-.status-card__connection {
-  display: inline-flex;
-  align-items: center;
+.status-card__badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 8px;
-  margin: 0;
-  color: #172026;
-  font-size: 0.875rem;
-  font-weight: 800;
+}
+
+.status-card__badge {
+  border: 1px solid #d8dfe2;
+  border-radius: 999px;
+  padding: 6px 10px;
+  color: #5c6870;
+  background: #f5f7f8;
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.status-card__badge--online {
+  border-color: #bad4ca;
+  color: #1f5f4b;
+  background: #e8f4ee;
 }
 
 .status-card__notice {
   margin: 0;
-  color: var(--theme-muted);
+  color: #5c6870;
   font-weight: 600;
 }
 
@@ -143,22 +168,21 @@ const lanternConnectionLabel = computed(() => (props.snapshot?.state.online ? 'O
 
 .status-card__grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
 }
 
 .status-card__item {
   display: grid;
   gap: 6px;
-  min-height: 96px;
-  border: 1px solid var(--theme-surface-border);
-  border-radius: 10px;
+  border: 1px solid #eef2f4;
+  border-radius: 8px;
   padding: 16px;
-  background: var(--theme-surface);
+  background: #f8fafb;
 }
 
 .status-card__label {
-  color: var(--theme-muted);
+  color: #5c6870;
   font-size: 0.8125rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -170,24 +194,13 @@ const lanternConnectionLabel = computed(() => (props.snapshot?.state.online ? 'O
   font-weight: 800;
 }
 
-.status-card__connection-dot {
-  width: 10px;
-  height: 10px;
-  flex-shrink: 0;
-  border-radius: 50%;
-}
-
-.status-card__connection-dot--online {
-  background: #16a34a;
-}
-
-.status-card__connection-dot--offline {
-  background: #dc2626;
-}
-
 @media (max-width: 840px) {
   .status-card__header {
     flex-direction: column;
+  }
+
+  .status-card__badges {
+    justify-content: flex-start;
   }
 
   .status-card__grid {
