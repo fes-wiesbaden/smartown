@@ -37,6 +37,10 @@ public class BridgeStateService {
         this.bridgeRealtimeService = bridgeRealtimeService;
     }
 
+    private synchronized void broadcastSnapshot() {
+        bridgeRealtimeService.broadcast(getSnapshot());
+    }
+
     /**
      * Liefert den letzten bekannten Snapshot, inklusive lazy Offline-Pruefung.
      */
@@ -51,18 +55,16 @@ public class BridgeStateService {
     }
 
     public synchronized void updateBrokerConnection(boolean connected) {
-        if (brokerConnected == connected) {
-            return;
-        }
         this.brokerConnected = connected;
-        broadcastSnapshot(Instant.now());
+        broadcastSnapshot();
     }
 
     /**
      * State-Topic ohne Fachereignis: zaehlt nur als Lebenszeichen.
      */
     public synchronized void handleHeartbeat() {
-        handleHeartbeat(Instant.now());
+        this.lastDeviceMessageAt = Instant.now();
+        broadcastSnapshot();
     }
 
     synchronized void handleHeartbeat(Instant receivedAt) {
@@ -73,18 +75,14 @@ public class BridgeStateService {
 
     public synchronized void setMode(BridgeMode mode) {
         Objects.requireNonNull(mode, "mode");
-        boolean changed = currentMode != mode;
         this.currentMode = mode;
         this.currentState = BridgeState.IDLE; // Reset state machine on mode change
         if (mode == BridgeMode.MANUAL_OPEN) {
-            changed |= openBridgeSafely();
+            openBridgeSafely();
         } else if (mode == BridgeMode.MANUAL_CLOSE) {
-            changed |= closeBridgeSafely();
+            closeBridgeSafely();
         }
-
-        if (changed) {
-            broadcastSnapshot(Instant.now());
-        }
+        broadcastSnapshot();
     }
 
     /**
@@ -97,38 +95,28 @@ public class BridgeStateService {
     synchronized void handleEvent(String eventPayload, Instant receivedAt) {
         Objects.requireNonNull(eventPayload, "eventPayload");
         Objects.requireNonNull(receivedAt, "receivedAt");
-        boolean wasOnline = isEspOnlineAt(receivedAt);
         this.lastDeviceMessageAt = receivedAt;
         if (currentMode != BridgeMode.AUTO) {
             broadcastSnapshot(receivedAt);
             return;
         }
 
-        boolean changed = false;
-
         if (currentState == BridgeState.IDLE) {
             if ("BOAT_DETECTED_SENSOR_1".equals(eventPayload)) {
                 currentState = BridgeState.SENSOR_1_FIRST;
-                changed = true;
-                changed |= openBridgeSafely();
+                openBridgeSafely();
             } else if ("BOAT_DETECTED_SENSOR_2".equals(eventPayload)) {
                 currentState = BridgeState.SENSOR_2_FIRST;
-                changed = true;
-                changed |= openBridgeSafely();
+                openBridgeSafely();
             }
         } else if (currentState == BridgeState.SENSOR_1_FIRST && "BOAT_DETECTED_SENSOR_2".equals(eventPayload)) {
             currentState = BridgeState.IDLE;
-            changed = true;
-            changed |= closeBridgeSafely();
+            closeBridgeSafely();
         } else if (currentState == BridgeState.SENSOR_2_FIRST && "BOAT_DETECTED_SENSOR_1".equals(eventPayload)) {
             currentState = BridgeState.IDLE;
-            changed = true;
-            changed |= closeBridgeSafely();
+            closeBridgeSafely();
         }
-
-        if (changed || !wasOnline) {
-            broadcastSnapshot(receivedAt);
-        }
+        broadcastSnapshot();
     }
 
     @Scheduled(fixedDelay = 5000)
