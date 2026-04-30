@@ -57,7 +57,7 @@ const thresholdLabel = computed(() => {
     <div class="status-card__header">
       <div>
         <p class="status-card__eyebrow">Laternen</p>
-        <h2 id="lantern-status-title" class="status-card__title">MQTT-MVP Status</h2>
+        <h2 id="lantern-status-title" class="status-card__title">MQTT Status</h2>
       </div>
       <div class="status-card__badges">
         <span class="status-card__badge" :class="{ 'status-card__badge--online': brokerConnected }">

@@ -15,7 +15,7 @@ defineProps<{
     <div class="status-card__header">
       <div>
         <p class="status-card__eyebrow">Brücke</p>
-        <h2 id="bridge-status-title" class="status-card__title">MQTT-MVP Status</h2>
+        <h2 id="bridge-status-title" class="status-card__title">MQTT Status</h2>
       </div>
       <div v-if="loading" class="status-card__badge status-card__badge--loading">Lädt...</div>
       <div v-else-if="error" class="status-card__badge status-card__badge--error">Fehler</div>
