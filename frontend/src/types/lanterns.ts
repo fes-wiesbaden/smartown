@@ -1,5 +1,5 @@
 /** Unterstuetzte Modi fuer die Laternensteuerung. */
-export type LanternMode = 'AUTO' | 'FORCED_ON' | 'FORCED_OFF'
+export type LanternMode = 'AUTO' | 'ON' | 'OFF'
 /** Technischer Zustand des Lampenausgangs. */
 export type LightState = 'ON' | 'OFF'
 /** Fachliche Ursachen fuer eine Statusaenderung. */

@@ -1,33 +1,7 @@
 import { computed, onMounted, onUnmounted, ref, shallowRef } from 'vue'
 
+import { openWebSocket, resolveApiBase, resolveWebSocketUrl } from '@/composables/backendEndpoints'
 import type { LanternMode, LanternSnapshot } from '@/types/lanterns'
-
-const DEV_SERVER_PORT = '5173'
-const BACKEND_PORT = '8080'
-
-/**
- * Nutzt im Vite-Dev-Server direkt das lokale Backend, im Docker-Frontend den Nginx-Proxy.
- */
-function resolveApiBase(): string {
-  if (window.location.port === DEV_SERVER_PORT) {
-    return `${window.location.protocol}//${window.location.hostname}:${BACKEND_PORT}/api`
-  }
-
-  return '/api'
-}
-
-/**
- * Leitet WebSocket-Aufrufe passend zur aktuellen Laufzeit an das Backend weiter.
- */
-function resolveWebSocketUrl(): string {
-  const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws'
-
-  if (window.location.port === DEV_SERVER_PORT) {
-    return `${protocol}://${window.location.hostname}:${BACKEND_PORT}/ws/lanterns`
-  }
-
-  return `${protocol}://${window.location.host}/ws/lanterns`
-}
 
 /**
  * Kapselt Snapshot-Laden, Live-Updates und Moduswechsel fuer die Laternenansicht.
@@ -37,15 +11,19 @@ export function useLanterns() {
   const loading = shallowRef(true)
   const error = shallowRef<string | null>(null)
   const submittingMode = shallowRef<LanternMode | null>(null)
+  const pendingMode = shallowRef<LanternMode | null>(null)
+  const latestModeRequestId = shallowRef(0)
   const websocket = shallowRef<WebSocket | null>(null)
+  const websocketConnected = shallowRef(false)
   const reconnectTimer = shallowRef<number | null>(null)
   const manualClose = shallowRef(false)
 
   const apiBase = resolveApiBase()
-  const webSocketUrl = resolveWebSocketUrl()
+  const webSocketUrl = resolveWebSocketUrl('/ws/lanterns')
 
   const brokerConnected = computed(() => snapshot.value?.brokerConnected ?? false)
   const lanternOnline = computed(() => snapshot.value?.state.online ?? false)
+  const liveConnected = computed(() => websocketConnected.value)
 
   /**
    * Laedt den zuletzt bekannten Snapshot einmal per REST.
@@ -72,7 +50,10 @@ export function useLanterns() {
    * Sendet einen manuellen Moduswechsel an das Backend.
    */
   async function setMode(mode: LanternMode) {
+    const requestId = latestModeRequestId.value + 1
+    latestModeRequestId.value = requestId
     submittingMode.value = mode
+    pendingMode.value = mode
     error.value = null
 
     try {
@@ -88,11 +69,30 @@ export function useLanterns() {
         throw new Error(`Mode update failed with status ${response.status}`)
       }
 
-      snapshot.value = (await response.json()) as LanternSnapshot
+      if (requestId !== latestModeRequestId.value) {
+        return
+      }
+
+      // Das Backend bestaetigt den Command sofort, der echte Zielzustand kommt aber asynchron per WebSocket.
+      // Deshalb darf ein alter REST-Snapshot den gerade geklickten Modus nicht wieder auf AUTO zuruecksetzen.
+      if (snapshot.value) {
+        snapshot.value = {
+          ...snapshot.value,
+          state: {
+            ...snapshot.value.state,
+            mode,
+          },
+        }
+      }
     } catch (requestError) {
-      error.value = requestError instanceof Error ? requestError.message : 'Mode update failed'
+      if (requestId === latestModeRequestId.value) {
+        pendingMode.value = null
+        error.value = requestError instanceof Error ? requestError.message : 'Mode update failed'
+      }
     } finally {
-      submittingMode.value = null
+      if (requestId === latestModeRequestId.value) {
+        submittingMode.value = null
+      }
     }
   }
 
@@ -118,21 +118,41 @@ export function useLanterns() {
       return
     }
 
-    const nextSocket = new WebSocket(webSocketUrl)
+    const nextSocket = openWebSocket(webSocketUrl)
     websocket.value = nextSocket
 
+    nextSocket.onopen = () => {
+      websocketConnected.value = true
+    }
+
     nextSocket.onmessage = (event) => {
-      snapshot.value = JSON.parse(event.data) as LanternSnapshot
+      const nextSnapshot = JSON.parse(event.data) as LanternSnapshot
+
+      if (pendingMode.value !== null && nextSnapshot.state.mode !== pendingMode.value) {
+        snapshot.value = {
+          ...nextSnapshot,
+          state: {
+            ...nextSnapshot.state,
+            mode: pendingMode.value,
+          },
+        }
+      } else {
+        pendingMode.value = null
+        snapshot.value = nextSnapshot
+      }
+
       error.value = null
     }
 
     nextSocket.onerror = () => {
+      websocketConnected.value = false
       if (!snapshot.value) {
         error.value = 'WebSocket connection failed'
       }
     }
 
     nextSocket.onclose = () => {
+      websocketConnected.value = false
       websocket.value = null
       scheduleReconnect()
     }
@@ -150,6 +170,7 @@ export function useLanterns() {
       window.clearTimeout(reconnectTimer.value)
       reconnectTimer.value = null
     }
+    websocketConnected.value = false
     websocket.value?.close()
     websocket.value = null
   })
@@ -157,6 +178,7 @@ export function useLanterns() {
   return {
     brokerConnected,
     error,
+    liveConnected,
     lanternOnline,
     loading,
     setMode,
