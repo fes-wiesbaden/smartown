@@ -13,21 +13,37 @@ vi.mock('@/composables/backendEndpoints', () => ({
 
 import { useBridge } from './useBridge'
 
+function createDeferred<T>() {
+  let resolve!: (value: T | PromiseLike<T>) => void
+  const promise = new Promise<T>((innerResolve) => {
+    resolve = innerResolve
+  })
+
+  return { promise, resolve }
+}
+
 class MockWebSocket {
   static instances: MockWebSocket[] = []
 
   url: string
+  onopen: (() => void) | null = null
   onmessage: ((event: MessageEvent<string>) => void) | null = null
   onerror: (() => void) | null = null
   onclose: (() => void) | null = null
-  readyState = 1
+  readyState = 0
 
   constructor(url: string) {
     this.url = url
     MockWebSocket.instances.push(this)
   }
 
+  open() {
+    this.readyState = 1
+    this.onopen?.()
+  }
+
   close() {
+    this.readyState = 3
     this.onclose?.()
   }
 }
@@ -41,6 +57,9 @@ const BridgeHarness = defineComponent({
         h('span', { id: 'mode' }, bridge.snapshot.value?.mode ?? 'none'),
         h('span', { id: 'open' }, bridge.snapshot.value?.isPhysicallyOpen ? 'open' : 'closed'),
         h('span', { id: 'online' }, bridge.bridgeOnline.value ? 'online' : 'offline'),
+        h('span', { id: 'live' }, bridge.liveConnected.value ? 'live' : 'offline'),
+        h('button', { id: 'open-mode', onClick: () => bridge.setBridgeMode('MANUAL_OPEN') }, 'open-mode'),
+        h('button', { id: 'close-mode', onClick: () => bridge.setBridgeMode('MANUAL_CLOSE') }, 'close-mode'),
       ])
   },
 })
@@ -106,5 +125,148 @@ describe('useBridge', () => {
     expect(wrapper.get('#mode').text()).toBe('MANUAL_OPEN')
     expect(wrapper.get('#open').text()).toBe('open')
     expect(wrapper.get('#online').text()).toBe('online')
+  })
+
+  it('keeps the latest selected bridge mode when requests finish out of order', async () => {
+    const firstUpdate = createDeferred<{ ok: boolean }>()
+    const secondUpdate = createDeferred<{ ok: boolean }>()
+
+    fetchMock.mockImplementation((input: string, init?: RequestInit) => {
+      if (input === '/api/bridge') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            mode: 'AUTO',
+            isPhysicallyOpen: false,
+            brokerConnected: true,
+            espOnline: true,
+            updatedAt: '2026-04-30T09:00:00Z',
+          }),
+        })
+      }
+
+      if (input === '/api/bridge/mode') {
+        if (init?.body === JSON.stringify({ mode: 'MANUAL_OPEN' })) {
+          return firstUpdate.promise
+        }
+
+        return secondUpdate.promise
+      }
+
+      throw new Error(`Unexpected fetch input: ${input}`)
+    })
+
+    const wrapper = mount(BridgeHarness)
+    await flushPromises()
+
+    await Promise.all([
+      wrapper.get('#open-mode').trigger('click'),
+      wrapper.get('#close-mode').trigger('click'),
+    ])
+
+    secondUpdate.resolve({ ok: true })
+    await flushPromises()
+
+    expect(wrapper.get('#mode').text()).toBe('MANUAL_CLOSE')
+
+    firstUpdate.resolve({ ok: true })
+    await flushPromises()
+
+    expect(wrapper.get('#mode').text()).toBe('MANUAL_CLOSE')
+  })
+
+  it('ignores stale bridge websocket modes until the latest manual mode is confirmed', async () => {
+    const firstUpdate = createDeferred<{ ok: boolean }>()
+    const secondUpdate = createDeferred<{ ok: boolean }>()
+
+    fetchMock.mockImplementation((input: string, init?: RequestInit) => {
+      if (input === '/api/bridge') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            mode: 'AUTO',
+            isPhysicallyOpen: false,
+            brokerConnected: true,
+            espOnline: true,
+            updatedAt: '2026-04-30T09:00:00Z',
+          }),
+        })
+      }
+
+      if (input === '/api/bridge/mode') {
+        if (init?.body === JSON.stringify({ mode: 'MANUAL_OPEN' })) {
+          return firstUpdate.promise
+        }
+
+        return secondUpdate.promise
+      }
+
+      throw new Error(`Unexpected fetch input: ${input}`)
+    })
+
+    const wrapper = mount(BridgeHarness)
+    await flushPromises()
+
+    await Promise.all([
+      wrapper.get('#open-mode').trigger('click'),
+      wrapper.get('#close-mode').trigger('click'),
+    ])
+
+    secondUpdate.resolve({ ok: true })
+    await flushPromises()
+
+    const bridgeSocket = MockWebSocket.instances[0]
+
+    bridgeSocket.onmessage?.({
+      data: JSON.stringify({
+        mode: 'MANUAL_OPEN',
+        isPhysicallyOpen: true,
+        brokerConnected: true,
+        espOnline: true,
+        updatedAt: '2026-04-30T09:15:00Z',
+      }),
+    } as MessageEvent<string>)
+    await flushPromises()
+
+    expect(wrapper.get('#mode').text()).toBe('MANUAL_CLOSE')
+    expect(wrapper.get('#open').text()).toBe('open')
+
+    bridgeSocket.onmessage?.({
+      data: JSON.stringify({
+        mode: 'MANUAL_CLOSE',
+        isPhysicallyOpen: false,
+        brokerConnected: true,
+        espOnline: true,
+        updatedAt: '2026-04-30T09:15:01Z',
+      }),
+    } as MessageEvent<string>)
+    await flushPromises()
+
+    expect(wrapper.get('#mode').text()).toBe('MANUAL_CLOSE')
+    expect(wrapper.get('#open').text()).toBe('closed')
+
+    firstUpdate.resolve({ ok: true })
+    await flushPromises()
+
+    expect(wrapper.get('#mode').text()).toBe('MANUAL_CLOSE')
+  })
+
+  it('reports live only after the websocket is actually open', async () => {
+    const wrapper = mount(BridgeHarness)
+    await flushPromises()
+
+    const bridgeSocket = MockWebSocket.instances[0]
+
+    expect(wrapper.get('#live').text()).toBe('offline')
+
+    bridgeSocket.open()
+    await flushPromises()
+
+    expect(wrapper.get('#live').text()).toBe('live')
+
+    bridgeSocket.close()
+    await flushPromises()
+
+    expect(wrapper.get('#live').text()).toBe('offline')
   })
 })

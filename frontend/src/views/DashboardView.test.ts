@@ -2,6 +2,40 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const fetchMock = vi.fn()
+const openWebSocketMock = vi.hoisted(() => vi.fn())
+
+vi.mock('@/composables/backendEndpoints', () => ({
+  openWebSocket: openWebSocketMock,
+  resolveApiBase: () => '/api',
+  resolveWebSocketUrl: (path: string) => `ws://localhost${path}`,
+}))
+
+class MockWebSocket {
+  static instances: MockWebSocket[] = []
+
+  url: string
+  onopen: (() => void) | null = null
+  onmessage: ((event: MessageEvent<string>) => void) | null = null
+  onerror: (() => void) | null = null
+  onclose: (() => void) | null = null
+  readyState = 0
+
+  constructor(url: string) {
+    this.url = url
+    MockWebSocket.instances.push(this)
+  }
+
+  open() {
+    this.readyState = 1
+    this.onopen?.()
+  }
+
+  close() {
+    this.readyState = 3
+    this.onclose?.()
+  }
+}
+
 const lanternSnapshot = {
   state: {
     mode: 'AUTO',
@@ -48,6 +82,8 @@ describe('DashboardView', () => {
       },
     }))
     vi.stubGlobal('fetch', fetchMock)
+    openWebSocketMock.mockImplementation((url: string) => new MockWebSocket(url))
+    MockWebSocket.instances = []
   })
 
   /**
@@ -55,6 +91,7 @@ describe('DashboardView', () => {
    */
   afterEach(() => {
     vi.unstubAllGlobals()
+    openWebSocketMock.mockReset()
   })
 
   /**
@@ -65,12 +102,21 @@ describe('DashboardView', () => {
     const wrapper = mount(DashboardView)
     await flushPromises()
 
+    MockWebSocket.instances.forEach((socket) => socket.open())
+    await flushPromises()
+
     expect(wrapper.text()).toContain('Kontrollzentrum')
+    expect(wrapper.text()).toContain('Live')
     expect(wrapper.text()).toContain('Laternen')
+    expect(wrapper.text()).toContain('Flughafen')
     expect(wrapper.text()).toContain('Brücke')
-    expect(wrapper.text()).toContain('ESP32 online')
-    expect(wrapper.text()).toContain('12.5 lx')
-    expect(wrapper.text()).toContain('GESCHLOSSEN')
+    expect(wrapper.text()).toContain('Online')
+    expect(wrapper.text()).toContain('Nicht verbunden')
+    expect(wrapper.text()).toContain('Auto')
+    expect(wrapper.text()).not.toContain('Flugzeugmessung')
+    expect(wrapper.text()).not.toContain('12.5 lx')
+    expect(wrapper.text()).toContain('Unten')
+    expect(wrapper.text()).not.toContain('Letztes Event')
 
     await wrapper.get('button').trigger('click')
     await flushPromises()
@@ -88,6 +134,14 @@ describe('DashboardView', () => {
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/bridge',
     )
+  })
+
+  it('keeps the live badge offline while websocket connections are still retrying', async () => {
+    const DashboardView = await loadDashboardView()
+    const wrapper = mount(DashboardView)
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('Live aus')
   })
 
   /**
@@ -116,7 +170,39 @@ describe('DashboardView', () => {
     const wrapper = mount(DashboardView)
     await flushPromises()
 
-    expect(wrapper.text()).toContain('ESP32 offline')
-    expect(wrapper.text()).not.toContain('ESP32 online')
+    expect(wrapper.text()).toContain('Offline')
+  })
+
+  it('disables all control buttons when broker or device connectivity is missing', async () => {
+    fetchMock.mockImplementation(async (input: string) => ({
+      ok: true,
+      json: async () => {
+        if (input === '/api/bridge') {
+          return {
+            ...bridgeSnapshot,
+            brokerConnected: false,
+            espOnline: false,
+          }
+        }
+
+        return {
+          ...lanternSnapshot,
+          brokerConnected: false,
+          state: {
+            ...lanternSnapshot.state,
+            online: false,
+          },
+        }
+      },
+    }))
+
+    const DashboardView = await loadDashboardView()
+    const wrapper = mount(DashboardView)
+    await flushPromises()
+
+    const buttons = wrapper.findAll('button')
+    expect(buttons).toHaveLength(8)
+    expect(buttons.filter((button) => button.attributes('disabled') !== undefined)).toHaveLength(6)
+    expect(wrapper.text()).not.toContain('Steuerung erst moeglich, wenn Broker und ESP32 online sind.')
   })
 })

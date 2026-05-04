@@ -20,7 +20,7 @@ import java.util.concurrent.ScheduledExecutorService;
 @Service
 @ConditionalOnProperty(name = "smartown.mqtt.enabled", havingValue = "true", matchIfMissing = true)
 /**
- * Verbindet Backend und MQTT-Broker fuer den Laternen-MVP in beide Richtungen.
+ * Verbindet Backend und MQTT-Broker fuer die sensorbasierten Laternen in beide Richtungen.
  * Weitere Module kommen nicht in diese Klasse, sondern als eigene Adapter wie
  * z. B. MqttAirportBridge mit Airport-Payloads oder MqttBridgeBridge mit
  * Bruecken-Payloads auf Basis von AbstractMqttBridge.
@@ -38,7 +38,7 @@ public class MqttLanternBridge extends AbstractMqttBridge implements LanternComm
     public MqttLanternBridge(MqttProperties properties,
                              LanternStateService lanternStateService,
                              ObjectMapper objectMapper) {
-        super(properties, objectMapper, "smartown-backend-");
+        super(properties, objectMapper, "smartown-backend-lantern-");
         this.lanternStateService = lanternStateService;
     }
 
@@ -47,7 +47,7 @@ public class MqttLanternBridge extends AbstractMqttBridge implements LanternComm
                       ObjectMapper objectMapper,
                       ScheduledExecutorService reconnectExecutor,
                       MqttClientFactory mqttClientFactory) {
-        super(properties, objectMapper, reconnectExecutor, mqttClientFactory, "smartown-backend-");
+        super(properties, objectMapper, reconnectExecutor, mqttClientFactory, "smartown-backend-lantern-");
         this.lanternStateService = lanternStateService;
     }
 
