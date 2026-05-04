@@ -11,9 +11,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "lucide-vue-next": "^1.0.0",
-    "openapi-fetch": "^0.17.0",
-    "pinia": "^3.0.4",
     "vue": "^3.5.32",
     "vue-router": "^4.6.4"
   },
@@ -22,7 +19,6 @@
     "@vitejs/plugin-vue": "^6.0.6",
     "@vue/test-utils": "^2.4.6",
     "jsdom": "^29.0.2",
-    "openapi-typescript": "^7.13.0",
     "tailwindcss": "^4.2.4",
     "typescript": "^5.9.3",
     "vite": "^7.3.2",
