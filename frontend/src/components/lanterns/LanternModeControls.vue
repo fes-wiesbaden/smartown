@@ -81,3 +81,109 @@ const buttonsDisabled = computed(() => requestPending.value || controlsBlocked.v
     </div>
   </section>
 </template>
+
+<style scoped>
+.controls {
+  display: grid;
+  height: 100%;
+  gap: 20px;
+  border: 1px solid var(--theme-card-border);
+  border-radius: 14px;
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 16px 40px rgba(96, 53, 250, 0.08);
+}
+
+.controls__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.controls__eyebrow {
+  margin: 0 0 4px;
+  color: var(--theme-accent);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.controls__title {
+  margin: 0;
+  color: #172026;
+  font-size: 1.125rem;
+  font-weight: 800;
+}
+
+.controls__mode {
+  border: 1px solid #d8dfe2;
+  border-radius: 999px;
+  padding: 6px 10px;
+  color: var(--theme-accent-strong);
+  background: var(--theme-accent-soft);
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.controls__buttons {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.controls__button {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 8px;
+  width: 100%;
+  height: 148px;
+  border: 1px solid var(--theme-card-border);
+  border-radius: 10px;
+  padding: 16px;
+  color: #172026;
+  background: var(--theme-surface);
+  text-align: left;
+  cursor: pointer;
+}
+
+.controls__button:disabled {
+  opacity: 0.75;
+}
+
+.controls__button--blocked:disabled {
+  cursor: not-allowed;
+}
+
+.controls__button--busy:disabled {
+  cursor: wait;
+}
+
+.controls__button--active {
+  border-color: var(--theme-accent);
+  background: var(--theme-accent-soft);
+}
+
+.controls__button--pending {
+  border-color: #6a7d86;
+  background: #edf1f3;
+}
+
+.controls__button-label {
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.controls__button-description {
+  color: var(--theme-muted);
+  font-size: 0.875rem;
+  line-height: 1.4;
+  overflow: hidden;
+}
+
+@media (max-width: 840px) {
+  .controls__buttons {
+    grid-template-columns: 1fr;
+  }
+}
+</style>

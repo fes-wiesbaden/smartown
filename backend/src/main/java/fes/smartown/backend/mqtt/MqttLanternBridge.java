@@ -38,7 +38,7 @@ public class MqttLanternBridge extends AbstractMqttBridge implements LanternComm
     public MqttLanternBridge(MqttProperties properties,
                              LanternStateService lanternStateService,
                              ObjectMapper objectMapper) {
-        super(properties, objectMapper, "smartown-backend-lantern-");
+        super(properties, objectMapper, "smartown-backend-");
         this.lanternStateService = lanternStateService;
     }
 
@@ -47,7 +47,7 @@ public class MqttLanternBridge extends AbstractMqttBridge implements LanternComm
                       ObjectMapper objectMapper,
                       ScheduledExecutorService reconnectExecutor,
                       MqttClientFactory mqttClientFactory) {
-        super(properties, objectMapper, reconnectExecutor, mqttClientFactory, "smartown-backend-lantern-");
+        super(properties, objectMapper, reconnectExecutor, mqttClientFactory, "smartown-backend-");
         this.lanternStateService = lanternStateService;
     }
 

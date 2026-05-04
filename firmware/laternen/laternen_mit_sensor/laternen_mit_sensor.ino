@@ -5,7 +5,7 @@
 #include <WiFi.h>
 #include <Wire.h>
 
-#include "secrets.h"
+#include "../laterne_mqtt_d32/secrets.h"
 
 namespace {
 constexpr char TOPIC_COMMAND[] = "smartown/lanterns/command";
