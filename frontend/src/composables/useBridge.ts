@@ -1,42 +1,43 @@
-import { computed, onMounted, onUnmounted, ref, shallowRef } from 'vue'
+import { onMounted, onUnmounted, ref, shallowRef, computed } from 'vue'
 
 import { openWebSocket, resolveApiBase, resolveWebSocketUrl } from '@/composables/backendEndpoints'
-import type { LanternMode, LanternSnapshot } from '@/types/lanterns'
+import type { BridgeMode, BridgeSnapshot } from '@/types/bridge'
 
 /**
- * Kapselt Snapshot-Laden, Live-Updates und Moduswechsel fuer die Laternenansicht.
+ * Kapselt Snapshot-Laden, Live-Updates und Moduswechsel fuer die Brueckenansicht.
  */
-export function useLanterns() {
-  const snapshot = ref<LanternSnapshot | null>(null)
+export function useBridge() {
+  const bridgeMode = ref<BridgeMode>('AUTO')
+  const submittingBridgeMode = ref<BridgeMode | null>(null)
+  const snapshot = ref<BridgeSnapshot | null>(null)
   const loading = shallowRef(true)
   const error = shallowRef<string | null>(null)
-  const submittingMode = shallowRef<LanternMode | null>(null)
   const websocket = shallowRef<WebSocket | null>(null)
   const reconnectTimer = shallowRef<number | null>(null)
   const manualClose = shallowRef(false)
-
   const apiBase = resolveApiBase()
-  const webSocketUrl = resolveWebSocketUrl('/ws/lanterns')
+  const webSocketUrl = resolveWebSocketUrl('/ws/bridge')
 
   const brokerConnected = computed(() => snapshot.value?.brokerConnected ?? false)
-  const lanternOnline = computed(() => snapshot.value?.state.online ?? false)
+  const bridgeOnline = computed(() => snapshot.value?.espOnline ?? false)
 
   /**
-   * Laedt den zuletzt bekannten Snapshot einmal per REST.
+   * Holt den Initialzustand einmal per REST, bevor Live-Updates uebernehmen.
    */
-  async function loadSnapshot() {
+  const loadSnapshot = async () => {
     loading.value = true
     error.value = null
 
     try {
-      const response = await fetch(`${apiBase}/lanterns`)
+      const response = await fetch(`${apiBase}/bridge`)
       if (!response.ok) {
-        throw new Error(`Snapshot request failed with status ${response.status}`)
+        throw new Error(`Bridge snapshot request failed with status ${response.status}`)
       }
 
-      snapshot.value = (await response.json()) as LanternSnapshot
+      snapshot.value = (await response.json()) as BridgeSnapshot
+      bridgeMode.value = snapshot.value.mode
     } catch (requestError) {
-      error.value = requestError instanceof Error ? requestError.message : 'Snapshot request failed'
+      error.value = requestError instanceof Error ? requestError.message : 'Bridge snapshot request failed'
     } finally {
       loading.value = false
     }
@@ -45,33 +46,32 @@ export function useLanterns() {
   /**
    * Sendet einen manuellen Moduswechsel an das Backend.
    */
-  async function setMode(mode: LanternMode) {
-    submittingMode.value = mode
+  const setBridgeMode = async (mode: BridgeMode) => {
+    submittingBridgeMode.value = mode
     error.value = null
 
     try {
-      const response = await fetch(`${apiBase}/lanterns/mode`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      const response = await fetch(`${apiBase}/bridge/mode`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ mode }),
       })
 
       if (!response.ok) {
-        throw new Error(`Mode update failed with status ${response.status}`)
+        throw new Error(`Bridge mode update failed with status ${response.status}`)
       }
 
-      snapshot.value = (await response.json()) as LanternSnapshot
+      bridgeMode.value = mode
+      await loadSnapshot()
     } catch (requestError) {
-      error.value = requestError instanceof Error ? requestError.message : 'Mode update failed'
+      error.value = requestError instanceof Error ? requestError.message : 'Bridge mode update failed'
     } finally {
-      submittingMode.value = null
+      submittingBridgeMode.value = null
     }
   }
 
   /**
-   * Plant einen spaeteren Reconnect, damit Frontend und Backend bei kurzen Ausfaellen wieder zusammenfinden.
+   * Verhindert hektische Reconnect-Loops bei kurzen Ausfaellen.
    */
   function scheduleReconnect() {
     if (manualClose.value || reconnectTimer.value !== null) {
@@ -96,13 +96,14 @@ export function useLanterns() {
     websocket.value = nextSocket
 
     nextSocket.onmessage = (event) => {
-      snapshot.value = JSON.parse(event.data) as LanternSnapshot
+      snapshot.value = JSON.parse(event.data) as BridgeSnapshot
+      bridgeMode.value = snapshot.value.mode
       error.value = null
     }
 
     nextSocket.onerror = () => {
       if (!snapshot.value) {
-        error.value = 'WebSocket connection failed'
+        error.value = 'Bridge WebSocket connection failed'
       }
     }
 
@@ -128,13 +129,5 @@ export function useLanterns() {
     websocket.value = null
   })
 
-  return {
-    brokerConnected,
-    error,
-    lanternOnline,
-    loading,
-    setMode,
-    snapshot,
-    submittingMode,
-  }
+  return { bridgeMode, submittingBridgeMode, setBridgeMode, snapshot, loading, error, brokerConnected, bridgeOnline }
 }
