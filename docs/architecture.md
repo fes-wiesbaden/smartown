@@ -59,13 +59,14 @@ Aktuelle Projektentscheidung:
 
 Aktuell bekannte Regeln:
 - Automatikbetrieb basiert auf Helligkeitswerten des einzigen BH1750
-- Die konkrete Schwellwert-Zahl ist noch nicht festgelegt und wird im Projekt ermittelt
+- Aktuell ist `50 lx` als fester Startwert im ESP32-Sketch hinterlegt
 - Laternen sind auch manuell ueber das Frontend schaltbar
 - Ein manueller Override bleibt aktiv, bis er bewusst wieder aufgehoben wird
 - Nach einem Neustart geht das System fuer Laternen wieder in den Modus `AUTO`
+- Nach einem MQTT-Reconnect geht das System fuer Laternen ebenfalls wieder in den Modus `AUTO`
 
 ### Entscheidungsort
-Die Fachentscheidung liegt im Backend. Der ESP32 entscheidet nicht selbst ueber Anwendungslogik, sondern liefert Messwerte und setzt Befehle um.
+Die Laternen bilden aktuell eine bewusst lokale Ausnahme. Der ESP32 entscheidet im Modus `AUTO` direkt anhand des BH1750 ueber `AN` oder `AUS`, damit Sensorik und Aktorik auch bei Backend- oder Netzproblemen stabil zusammenbleiben. Backend und Frontend wechseln nur den Modus, visualisieren den Zustand und verteilen Live-Updates per WebSocket.
 
 ## Kommunikationsmuster
 ### REST

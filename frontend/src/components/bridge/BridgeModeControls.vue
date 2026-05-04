@@ -1,36 +1,24 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import type { LanternMode } from '@/types/lanterns'
+import type { BridgeMode } from '@/types/bridge'
 
-/**
- * Props fuer den aktuell sichtbaren Modus und laufende REST-Aktionen.
- */
 const props = defineProps<{
   controlsEnabled: boolean
-  currentMode: LanternMode | null
-  submittingMode: LanternMode | null
+  currentMode: BridgeMode | null
+  submittingMode: BridgeMode | null
 }>()
 
-/**
- * Liefert den gewaehlten Modus an den uebergeordneten Container zurueck.
- */
 const emit = defineEmits<{
-  setMode: [mode: LanternMode]
+  setMode: [mode: BridgeMode]
 }>()
 
-/**
- * Beschreibt die drei unterstuetzten Bedienmodi fuer das Frontend.
- */
-const modes: Array<{ value: LanternMode; label: string; description: string }> = [
-  { value: 'AUTO', label: 'Auto', description: 'BH1750 steuert die Laternen automatisch.' },
-  { value: 'ON', label: 'Ein', description: 'Laternen bleiben manuell eingeschaltet.' },
-  { value: 'OFF', label: 'Aus', description: 'Laternen bleiben manuell ausgeschaltet.' },
+const modes: Array<{ value: BridgeMode; label: string; description: string }> = [
+  { value: 'AUTO', label: 'Auto', description: 'Sensoren steuern die Brücke automatisch.' },
+  { value: 'MANUAL_OPEN', label: 'Hoch', description: 'Brücke wird sicher hochgefahren (max. 1x).' },
+  { value: 'MANUAL_CLOSE', label: 'Runter', description: 'Brücke wird sicher runtergefahren (max. 1x).' },
 ]
 
-/**
- * Formatiert den aktiven Modus fuer das Kopf-Badge lesbar.
- */
 const currentModeLabel = computed(() => {
   if (props.currentMode === null) {
     return 'unbekannt'
@@ -39,23 +27,20 @@ const currentModeLabel = computed(() => {
     return 'Auto'
   }
 
-  return props.currentMode === 'ON' ? 'An' : 'Aus'
+  return props.currentMode === 'MANUAL_OPEN' ? 'Hoch' : 'Runter'
 })
 
-/**
- * Sperrt die Steuerung bei ausstehendem Request oder fehlender Broker-/ESP32-Verbindung.
- */
 const requestPending = computed(() => props.submittingMode !== null)
 const controlsBlocked = computed(() => !props.controlsEnabled)
 const buttonsDisabled = computed(() => requestPending.value || controlsBlocked.value)
 </script>
 
 <template>
-  <section class="controls" aria-labelledby="lantern-controls-title">
+  <section class="controls" aria-labelledby="bridge-controls-title">
     <div class="controls__header">
       <div>
         <p class="controls__eyebrow">Steuerung</p>
-        <h2 id="lantern-controls-title" class="controls__title">Laternenmodus</h2>
+        <h2 id="bridge-controls-title" class="controls__title">Brückenmodus</h2>
       </div>
       <span class="controls__mode">{{ currentModeLabel }}</span>
     </div>

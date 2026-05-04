@@ -1,22 +1,17 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import type { LanternSnapshot } from '@/types/lanterns'
+import type { BridgeSnapshot } from '@/types/bridge'
 
-/**
- * Enthalten den letzten Snapshot plus Lade- und Fehlerzustand fuer die Statuskarte.
- */
 const props = defineProps<{
-  error: string | null
+  snapshot: BridgeSnapshot | null
   loading: boolean
-  snapshot: LanternSnapshot | null
+  error: string | null
+  bridgeOnline: boolean
 }>()
 
-/**
- * Macht den technischen Modus im UI lesbar.
- */
 const modeLabel = computed(() => {
-  const mode = props.snapshot?.state.mode
+  const mode = props.snapshot?.mode
   if (!mode) {
     return '-'
   }
@@ -25,45 +20,34 @@ const modeLabel = computed(() => {
     return 'Auto'
   }
 
-  return mode === 'ON' ? 'An' : 'Aus'
+  return mode === 'MANUAL_OPEN' ? 'Hoch' : 'Runter'
 })
 
-/**
- * Uebersetzt den technischen Lichtzustand in eine lesbare Anzeige.
- */
-const lightLabel = computed(() => {
-  if (!props.snapshot) {
-    return '-'
+const bridgePositionLabel = computed(() => {
+  if (!props.snapshot || !props.bridgeOnline) {
+    return '/'
   }
 
-  return props.snapshot.state.lightState === 'ON' ? 'An' : 'Aus'
+  return props.snapshot.isPhysicallyOpen ? 'Oben' : 'Unten'
 })
 
-/**
- * Formatiert den aktuell gemeldeten Schwellwert mit Einheit.
- */
-const thresholdLabel = computed(() => {
-  const threshold = props.snapshot?.state.thresholdLux
-  return threshold === null || threshold === undefined ? '-' : `${threshold.toFixed(1)} lx`
-})
-
-const lanternConnectionLabel = computed(() => (props.snapshot?.state.online ? 'Online' : 'Offline'))
+const bridgeConnectionLabel = computed(() => (props.bridgeOnline ? 'Online' : 'Offline'))
 </script>
 
 <template>
-  <section class="status-card" aria-labelledby="lantern-status-title">
+  <article class="status-card" aria-labelledby="bridge-status-title">
     <div class="status-card__header">
       <div>
-        <p class="status-card__eyebrow">Laternen</p>
-        <h2 id="lantern-status-title" class="status-card__title">Laternenstatus</h2>
+        <p class="status-card__eyebrow">Brücke</p>
+        <h2 id="bridge-status-title" class="status-card__title">Brückenstatus</h2>
       </div>
       <p class="status-card__connection">
         <span
           class="status-card__connection-dot"
-          :class="snapshot?.state.online ? 'status-card__connection-dot--online' : 'status-card__connection-dot--offline'"
+          :class="bridgeOnline ? 'status-card__connection-dot--online' : 'status-card__connection-dot--offline'"
           aria-hidden="true"
         ></span>
-        {{ lanternConnectionLabel }}
+        {{ bridgeConnectionLabel }}
       </p>
     </div>
 
@@ -76,21 +60,18 @@ const lanternConnectionLabel = computed(() => (props.snapshot?.state.online ? 'O
         <strong class="status-card__value">{{ modeLabel }}</strong>
       </article>
       <article class="status-card__item">
-        <span class="status-card__label">Licht</span>
-        <strong class="status-card__value">{{ lightLabel }}</strong>
-      </article>
-      <article class="status-card__item">
-        <span class="status-card__label">Schwellwert</span>
-        <strong class="status-card__value">{{ thresholdLabel }}</strong>
+        <span class="status-card__label">Zustand</span>
+        <strong class="status-card__value">{{ bridgePositionLabel }}</strong>
       </article>
     </div>
-  </section>
+  </article>
 </template>
 
 <style scoped>
 .status-card {
   display: grid;
   height: 100%;
+  align-content: start;
   gap: 20px;
   border: 1px solid var(--theme-card-border);
   border-radius: 14px;
@@ -121,16 +102,6 @@ const lanternConnectionLabel = computed(() => (props.snapshot?.state.online ? 'O
   font-weight: 800;
 }
 
-.status-card__connection {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0;
-  color: #172026;
-  font-size: 0.875rem;
-  font-weight: 800;
-}
-
 .status-card__notice {
   margin: 0;
   color: var(--theme-muted);
@@ -141,10 +112,21 @@ const lanternConnectionLabel = computed(() => (props.snapshot?.state.online ? 'O
   color: #b42318;
 }
 
+.status-card__connection {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: #172026;
+  font-size: 0.875rem;
+  font-weight: 800;
+}
+
 .status-card__grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+  align-content: start;
 }
 
 .status-card__item {

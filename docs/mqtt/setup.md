@@ -129,7 +129,7 @@ mosquitto_sub -h 10.93.135.232 -p 1883 -u smartown -P mqttPw -t smartown/lantern
 
 Command senden:
 ```bash
-mosquitto_pub -h 10.93.135.232 -p 1883 -u smartown -P mqttPw -t smartown/lanterns/command -m '{"action":"SET_MODE","mode":"FORCED_ON"}'
+mosquitto_pub -h 10.93.135.232 -p 1883 -u smartown -P mqttPw -t smartown/lanterns/command -m '{"action":"SET_MODE","mode":"ON"}'
 ```
 
 ## Hinweise

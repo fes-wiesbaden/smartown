@@ -1,61 +1,30 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import type { LanternMode } from '@/types/lanterns'
+import type { AirportMode } from '@/types/airport'
 
-/**
- * Props fuer den aktuell sichtbaren Modus und laufende REST-Aktionen.
- */
 const props = defineProps<{
-  controlsEnabled: boolean
-  currentMode: LanternMode | null
-  submittingMode: LanternMode | null
+  currentMode: AirportMode
 }>()
 
-/**
- * Liefert den gewaehlten Modus an den uebergeordneten Container zurueck.
- */
 const emit = defineEmits<{
-  setMode: [mode: LanternMode]
+  setMode: [mode: AirportMode]
 }>()
 
-/**
- * Beschreibt die drei unterstuetzten Bedienmodi fuer das Frontend.
- */
-const modes: Array<{ value: LanternMode; label: string; description: string }> = [
-  { value: 'AUTO', label: 'Auto', description: 'BH1750 steuert die Laternen automatisch.' },
-  { value: 'ON', label: 'Ein', description: 'Laternen bleiben manuell eingeschaltet.' },
-  { value: 'OFF', label: 'Aus', description: 'Laternen bleiben manuell ausgeschaltet.' },
+const modes: Array<{ value: AirportMode; label: string; description: string }> = [
+  { value: 'ON', label: 'An', description: 'Lichter aktiv, Flugzeugerkennung und Messung laufen mit.' },
+  { value: 'OFF', label: 'Aus', description: 'Lichter aus, Flugzeugerkennung und Messung sind deaktiviert.' },
 ]
 
-/**
- * Formatiert den aktiven Modus fuer das Kopf-Badge lesbar.
- */
-const currentModeLabel = computed(() => {
-  if (props.currentMode === null) {
-    return 'unbekannt'
-  }
-  if (props.currentMode === 'AUTO') {
-    return 'Auto'
-  }
-
-  return props.currentMode === 'ON' ? 'An' : 'Aus'
-})
-
-/**
- * Sperrt die Steuerung bei ausstehendem Request oder fehlender Broker-/ESP32-Verbindung.
- */
-const requestPending = computed(() => props.submittingMode !== null)
-const controlsBlocked = computed(() => !props.controlsEnabled)
-const buttonsDisabled = computed(() => requestPending.value || controlsBlocked.value)
+const currentModeLabel = computed(() => (props.currentMode === 'ON' ? 'An' : 'Aus'))
 </script>
 
 <template>
-  <section class="controls" aria-labelledby="lantern-controls-title">
+  <section class="controls" aria-labelledby="airport-controls-title">
     <div class="controls__header">
       <div>
         <p class="controls__eyebrow">Steuerung</p>
-        <h2 id="lantern-controls-title" class="controls__title">Laternenmodus</h2>
+        <h2 id="airport-controls-title" class="controls__title">Flughafenmodus</h2>
       </div>
       <span class="controls__mode">{{ currentModeLabel }}</span>
     </div>
@@ -65,19 +34,14 @@ const buttonsDisabled = computed(() => requestPending.value || controlsBlocked.v
         v-for="mode in modes"
         :key="mode.value"
         class="controls__button"
-        :class="{
-          'controls__button--active': currentMode === mode.value,
-          'controls__button--blocked': controlsBlocked,
-          'controls__button--busy': requestPending,
-          'controls__button--pending': submittingMode === mode.value,
-        }"
+        :class="{ 'controls__button--active': currentMode === mode.value }"
         type="button"
-        :disabled="buttonsDisabled"
         @click="emit('setMode', mode.value)"
       >
         <span class="controls__button-label">{{ mode.label }}</span>
         <span class="controls__button-description">{{ mode.description }}</span>
       </button>
+      <div class="controls__button-placeholder" aria-hidden="true"></div>
     </div>
   </section>
 </template>
@@ -147,26 +111,9 @@ const buttonsDisabled = computed(() => requestPending.value || controlsBlocked.v
   cursor: pointer;
 }
 
-.controls__button:disabled {
-  opacity: 0.75;
-}
-
-.controls__button--blocked:disabled {
-  cursor: not-allowed;
-}
-
-.controls__button--busy:disabled {
-  cursor: wait;
-}
-
 .controls__button--active {
   border-color: var(--theme-accent);
   background: var(--theme-accent-soft);
-}
-
-.controls__button--pending {
-  border-color: #6a7d86;
-  background: #edf1f3;
 }
 
 .controls__button-label {
@@ -183,9 +130,17 @@ const buttonsDisabled = computed(() => requestPending.value || controlsBlocked.v
   hyphens: auto;
 }
 
+.controls__button-placeholder {
+  visibility: hidden;
+}
+
 @media (max-width: 840px) {
   .controls__buttons {
     grid-template-columns: 1fr;
+  }
+
+  .controls__button-placeholder {
+    display: none;
   }
 }
 </style>
