@@ -1,7 +1,10 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+
 import type { BridgeMode } from '@/types/bridge'
 
 const props = defineProps<{
+  controlsEnabled: boolean
   currentMode: BridgeMode | null
   submittingMode: BridgeMode | null
 }>()
@@ -15,6 +18,21 @@ const modes: Array<{ value: BridgeMode; label: string; description: string }> = 
   { value: 'MANUAL_OPEN', label: 'Hoch', description: 'Brücke wird sicher hochgefahren (max. 1x).' },
   { value: 'MANUAL_CLOSE', label: 'Runter', description: 'Brücke wird sicher runtergefahren (max. 1x).' },
 ]
+
+const currentModeLabel = computed(() => {
+  if (props.currentMode === null) {
+    return 'unbekannt'
+  }
+  if (props.currentMode === 'AUTO') {
+    return 'Auto'
+  }
+
+  return props.currentMode === 'MANUAL_OPEN' ? 'Hoch' : 'Runter'
+})
+
+const requestPending = computed(() => props.submittingMode !== null)
+const controlsBlocked = computed(() => !props.controlsEnabled)
+const buttonsDisabled = computed(() => requestPending.value || controlsBlocked.value)
 </script>
 
 <template>
@@ -24,7 +42,7 @@ const modes: Array<{ value: BridgeMode; label: string; description: string }> = 
         <p class="controls__eyebrow">Steuerung</p>
         <h2 id="bridge-controls-title" class="controls__title">Brückenmodus</h2>
       </div>
-      <span class="controls__mode">{{ currentMode ?? 'unbekannt' }}</span>
+      <span class="controls__mode">{{ currentModeLabel }}</span>
     </div>
 
     <div class="controls__buttons">
@@ -34,10 +52,12 @@ const modes: Array<{ value: BridgeMode; label: string; description: string }> = 
         class="controls__button"
         :class="{
           'controls__button--active': currentMode === mode.value,
+          'controls__button--blocked': controlsBlocked,
+          'controls__button--busy': requestPending,
           'controls__button--pending': submittingMode === mode.value,
         }"
         type="button"
-        :disabled="submittingMode !== null"
+        :disabled="buttonsDisabled"
         @click="emit('setMode', mode.value)"
       >
         <span class="controls__button-label">{{ mode.label }}</span>
@@ -50,11 +70,13 @@ const modes: Array<{ value: BridgeMode; label: string; description: string }> = 
 <style scoped>
 .controls {
   display: grid;
+  height: 100%;
   gap: 20px;
-  border: 1px solid #d9e0e2;
-  border-radius: 8px;
+  border: 1px solid var(--theme-card-border);
+  border-radius: 14px;
   padding: 24px;
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 16px 40px rgba(96, 53, 250, 0.08);
 }
 
 .controls__header {
@@ -66,7 +88,7 @@ const modes: Array<{ value: BridgeMode; label: string; description: string }> = 
 
 .controls__eyebrow {
   margin: 0 0 4px;
-  color: #357266;
+  color: var(--theme-accent);
   font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -83,8 +105,8 @@ const modes: Array<{ value: BridgeMode; label: string; description: string }> = 
   border: 1px solid #d8dfe2;
   border-radius: 999px;
   padding: 6px 10px;
-  color: #42525b;
-  background: #f5f7f8;
+  color: var(--theme-accent-strong);
+  background: var(--theme-accent-soft);
   font-size: 0.8125rem;
   font-weight: 700;
 }
@@ -97,25 +119,34 @@ const modes: Array<{ value: BridgeMode; label: string; description: string }> = 
 
 .controls__button {
   display: grid;
+  grid-template-rows: auto 1fr;
   gap: 8px;
-  min-height: 124px;
-  border: 1px solid #d9e0e2;
-  border-radius: 8px;
+  width: 100%;
+  height: 184px;
+  border: 1px solid var(--theme-card-border);
+  border-radius: 10px;
   padding: 16px;
   color: #172026;
-  background: #f8fafb;
+  background: var(--theme-surface);
   text-align: left;
   cursor: pointer;
 }
 
 .controls__button:disabled {
-  cursor: wait;
   opacity: 0.75;
 }
 
+.controls__button--blocked:disabled {
+  cursor: not-allowed;
+}
+
+.controls__button--busy:disabled {
+  cursor: wait;
+}
+
 .controls__button--active {
-  border-color: #357266;
-  background: #e8f4ee;
+  border-color: var(--theme-accent);
+  background: var(--theme-accent-soft);
 }
 
 .controls__button--pending {
@@ -129,9 +160,12 @@ const modes: Array<{ value: BridgeMode; label: string; description: string }> = 
 }
 
 .controls__button-description {
-  color: #5c6870;
+  color: var(--theme-muted);
   font-size: 0.875rem;
   line-height: 1.4;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  hyphens: auto;
 }
 
 @media (max-width: 840px) {

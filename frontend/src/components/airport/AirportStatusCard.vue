@@ -1,77 +1,46 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import type { BridgeSnapshot } from '@/types/bridge'
+import type { AirportMode } from '@/types/airport'
 
 const props = defineProps<{
-  snapshot: BridgeSnapshot | null
-  loading: boolean
-  error: string | null
-  bridgeOnline: boolean
+  mode: AirportMode
 }>()
 
-const modeLabel = computed(() => {
-  const mode = props.snapshot?.mode
-  if (!mode) {
-    return '-'
-  }
-
-  if (mode === 'AUTO') {
-    return 'Auto'
-  }
-
-  return mode === 'MANUAL_OPEN' ? 'Hoch' : 'Runter'
-})
-
-const bridgePositionLabel = computed(() => {
-  if (!props.snapshot || !props.bridgeOnline) {
-    return '/'
-  }
-
-  return props.snapshot.isPhysicallyOpen ? 'Oben' : 'Unten'
-})
-
-const bridgeConnectionLabel = computed(() => (props.bridgeOnline ? 'Online' : 'Offline'))
+const airportConnectionLabel = 'Nicht verbunden'
+const lightsLabel = computed(() => (props.mode === 'ON' ? 'Aktiv' : 'Aus'))
 </script>
 
 <template>
-  <article class="status-card" aria-labelledby="bridge-status-title">
+  <section class="status-card" aria-labelledby="airport-status-title">
     <div class="status-card__header">
       <div>
-        <p class="status-card__eyebrow">Brücke</p>
-        <h2 id="bridge-status-title" class="status-card__title">Brückenstatus</h2>
+        <p class="status-card__eyebrow">Flughafen</p>
+        <h2 id="airport-status-title" class="status-card__title">Flughafenstatus</h2>
       </div>
       <p class="status-card__connection">
-        <span
-          class="status-card__connection-dot"
-          :class="bridgeOnline ? 'status-card__connection-dot--online' : 'status-card__connection-dot--offline'"
-          aria-hidden="true"
-        ></span>
-        {{ bridgeConnectionLabel }}
+        <span class="status-card__connection-dot status-card__connection-dot--offline" aria-hidden="true"></span>
+        {{ airportConnectionLabel }}
       </p>
     </div>
 
-    <p v-if="loading" class="status-card__notice">Snapshot wird geladen.</p>
-    <p v-else-if="error" class="status-card__notice status-card__notice--error">{{ error }}</p>
-
-    <div v-if="snapshot" class="status-card__grid">
+    <div class="status-card__grid">
       <article class="status-card__item">
         <span class="status-card__label">Modus</span>
-        <strong class="status-card__value">{{ modeLabel }}</strong>
+        <strong class="status-card__value">{{ mode === 'ON' ? 'An' : 'Aus' }}</strong>
       </article>
       <article class="status-card__item">
-        <span class="status-card__label">Zustand</span>
-        <strong class="status-card__value">{{ bridgePositionLabel }}</strong>
+        <span class="status-card__label">Landelichter</span>
+        <strong class="status-card__value">{{ lightsLabel }}</strong>
       </article>
     </div>
-  </article>
+  </section>
 </template>
 
 <style scoped>
 .status-card {
   display: grid;
   height: 100%;
-  align-content: start;
   gap: 20px;
   border: 1px solid var(--theme-card-border);
   border-radius: 14px;
@@ -102,16 +71,6 @@ const bridgeConnectionLabel = computed(() => (props.bridgeOnline ? 'Online' : 'O
   font-weight: 800;
 }
 
-.status-card__notice {
-  margin: 0;
-  color: var(--theme-muted);
-  font-weight: 600;
-}
-
-.status-card__notice--error {
-  color: #b42318;
-}
-
 .status-card__connection {
   display: inline-flex;
   align-items: center;
@@ -126,7 +85,6 @@ const bridgeConnectionLabel = computed(() => (props.bridgeOnline ? 'Online' : 'O
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
-  align-content: start;
 }
 
 .status-card__item {
@@ -157,10 +115,6 @@ const bridgeConnectionLabel = computed(() => (props.bridgeOnline ? 'Online' : 'O
   height: 10px;
   flex-shrink: 0;
   border-radius: 50%;
-}
-
-.status-card__connection-dot--online {
-  background: #16a34a;
 }
 
 .status-card__connection-dot--offline {

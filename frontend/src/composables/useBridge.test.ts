@@ -17,17 +17,24 @@ class MockWebSocket {
   static instances: MockWebSocket[] = []
 
   url: string
+  onopen: (() => void) | null = null
   onmessage: ((event: MessageEvent<string>) => void) | null = null
   onerror: (() => void) | null = null
   onclose: (() => void) | null = null
-  readyState = 1
+  readyState = 0
 
   constructor(url: string) {
     this.url = url
     MockWebSocket.instances.push(this)
   }
 
+  open() {
+    this.readyState = 1
+    this.onopen?.()
+  }
+
   close() {
+    this.readyState = 3
     this.onclose?.()
   }
 }
@@ -41,6 +48,7 @@ const BridgeHarness = defineComponent({
         h('span', { id: 'mode' }, bridge.snapshot.value?.mode ?? 'none'),
         h('span', { id: 'open' }, bridge.snapshot.value?.isPhysicallyOpen ? 'open' : 'closed'),
         h('span', { id: 'online' }, bridge.bridgeOnline.value ? 'online' : 'offline'),
+        h('span', { id: 'live' }, bridge.liveConnected.value ? 'live' : 'offline'),
       ])
   },
 })
@@ -106,5 +114,24 @@ describe('useBridge', () => {
     expect(wrapper.get('#mode').text()).toBe('MANUAL_OPEN')
     expect(wrapper.get('#open').text()).toBe('open')
     expect(wrapper.get('#online').text()).toBe('online')
+  })
+
+  it('reports live only after the websocket is actually open', async () => {
+    const wrapper = mount(BridgeHarness)
+    await flushPromises()
+
+    const bridgeSocket = MockWebSocket.instances[0]
+
+    expect(wrapper.get('#live').text()).toBe('offline')
+
+    bridgeSocket.open()
+    await flushPromises()
+
+    expect(wrapper.get('#live').text()).toBe('live')
+
+    bridgeSocket.close()
+    await flushPromises()
+
+    expect(wrapper.get('#live').text()).toBe('offline')
   })
 })

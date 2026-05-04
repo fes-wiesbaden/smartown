@@ -13,6 +13,7 @@ export function useBridge() {
   const loading = shallowRef(true)
   const error = shallowRef<string | null>(null)
   const websocket = shallowRef<WebSocket | null>(null)
+  const websocketConnected = shallowRef(false)
   const reconnectTimer = shallowRef<number | null>(null)
   const manualClose = shallowRef(false)
   const apiBase = resolveApiBase()
@@ -20,6 +21,7 @@ export function useBridge() {
 
   const brokerConnected = computed(() => snapshot.value?.brokerConnected ?? false)
   const bridgeOnline = computed(() => snapshot.value?.espOnline ?? false)
+  const liveConnected = computed(() => websocketConnected.value)
 
   /**
    * Holt den Initialzustand einmal per REST, bevor Live-Updates uebernehmen.
@@ -95,6 +97,10 @@ export function useBridge() {
     const nextSocket = openWebSocket(webSocketUrl)
     websocket.value = nextSocket
 
+    nextSocket.onopen = () => {
+      websocketConnected.value = true
+    }
+
     nextSocket.onmessage = (event) => {
       snapshot.value = JSON.parse(event.data) as BridgeSnapshot
       bridgeMode.value = snapshot.value.mode
@@ -102,12 +108,14 @@ export function useBridge() {
     }
 
     nextSocket.onerror = () => {
+      websocketConnected.value = false
       if (!snapshot.value) {
         error.value = 'Bridge WebSocket connection failed'
       }
     }
 
     nextSocket.onclose = () => {
+      websocketConnected.value = false
       websocket.value = null
       scheduleReconnect()
     }
@@ -125,9 +133,10 @@ export function useBridge() {
       window.clearTimeout(reconnectTimer.value)
       reconnectTimer.value = null
     }
+    websocketConnected.value = false
     websocket.value?.close()
     websocket.value = null
   })
 
-  return { bridgeMode, submittingBridgeMode, setBridgeMode, snapshot, loading, error, brokerConnected, bridgeOnline }
+  return { bridgeMode, submittingBridgeMode, setBridgeMode, snapshot, loading, error, brokerConnected, bridgeOnline, liveConnected }
 }

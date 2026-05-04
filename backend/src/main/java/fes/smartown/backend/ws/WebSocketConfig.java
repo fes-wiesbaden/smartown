@@ -16,7 +16,8 @@ public class WebSocketConfig implements WebSocketConfigurer {
     private static final String[] ALLOWED_ORIGIN_PATTERNS = {
             "http://localhost:*",
             "http://127.0.0.1:*",
-            "http://10.93.128.204:*"
+            "http://10.93.134.184:*",
+            "http://10.93.*"
     };
 
     private final LanternWebSocketHandler lanternWebSocketHandler;
