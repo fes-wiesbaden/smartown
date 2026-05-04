@@ -105,15 +105,12 @@ public class LanternStateService {
             return;
         }
 
-        if (!lastDeviceMessageAt.compareAndSet(lastSeenAt, null)) {
-            return;
-        }
-
         updateSnapshot(previous -> {
             if (!previous.state().online()) {
                 return previous;
             }
 
+            lastDeviceMessageAt.compareAndSet(lastSeenAt, null);
             return new LanternSnapshot(
                     withOnline(previous.state(), false),
                     previous.lastEvent(),

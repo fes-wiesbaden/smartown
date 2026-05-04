@@ -9,6 +9,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/bridge")
+@CrossOrigin(origins = "*")
 /**
  * Stellt Snapshot und Moduswechsel fuer das Brueckenmodul per REST bereit.
  */

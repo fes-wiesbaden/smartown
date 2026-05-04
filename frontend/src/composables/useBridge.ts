@@ -7,14 +7,12 @@ import type { BridgeMode, BridgeSnapshot } from '@/types/bridge'
  * Kapselt Snapshot-Laden, Live-Updates und Moduswechsel fuer die Brueckenansicht.
  */
 export function useBridge() {
-  const submittingBridgeMode = shallowRef<BridgeMode | null>(null)
-  const pendingMode = shallowRef<BridgeMode | null>(null)
-  const latestModeRequestId = shallowRef(0)
+  const bridgeMode = ref<BridgeMode>('AUTO')
+  const submittingBridgeMode = ref<BridgeMode | null>(null)
   const snapshot = ref<BridgeSnapshot | null>(null)
   const loading = shallowRef(true)
   const error = shallowRef<string | null>(null)
   const websocket = shallowRef<WebSocket | null>(null)
-  const websocketConnected = shallowRef(false)
   const reconnectTimer = shallowRef<number | null>(null)
   const manualClose = shallowRef(false)
   const apiBase = resolveApiBase()
@@ -22,7 +20,7 @@ export function useBridge() {
 
   const brokerConnected = computed(() => snapshot.value?.brokerConnected ?? false)
   const bridgeOnline = computed(() => snapshot.value?.espOnline ?? false)
-  const liveConnected = computed(() => websocketConnected.value)
+  const liveConnected = computed(() => websocket.value !== null)
 
   /**
    * Holt den Initialzustand einmal per REST, bevor Live-Updates uebernehmen.
@@ -38,6 +36,7 @@ export function useBridge() {
       }
 
       snapshot.value = (await response.json()) as BridgeSnapshot
+      bridgeMode.value = snapshot.value.mode
     } catch (requestError) {
       error.value = requestError instanceof Error ? requestError.message : 'Bridge snapshot request failed'
     } finally {
@@ -49,10 +48,7 @@ export function useBridge() {
    * Sendet einen manuellen Moduswechsel an das Backend.
    */
   const setBridgeMode = async (mode: BridgeMode) => {
-    const requestId = latestModeRequestId.value + 1
-    latestModeRequestId.value = requestId
     submittingBridgeMode.value = mode
-    pendingMode.value = mode
     error.value = null
 
     try {
@@ -66,25 +62,12 @@ export function useBridge() {
         throw new Error(`Bridge mode update failed with status ${response.status}`)
       }
 
-      if (requestId !== latestModeRequestId.value) {
-        return
-      }
-
-      if (snapshot.value) {
-        snapshot.value = {
-          ...snapshot.value,
-          mode,
-        }
-      }
+      bridgeMode.value = mode
+      await loadSnapshot()
     } catch (requestError) {
-      if (requestId === latestModeRequestId.value) {
-        pendingMode.value = null
-        error.value = requestError instanceof Error ? requestError.message : 'Bridge mode update failed'
-      }
+      error.value = requestError instanceof Error ? requestError.message : 'Bridge mode update failed'
     } finally {
-      if (requestId === latestModeRequestId.value) {
-        submittingBridgeMode.value = null
-      }
+      submittingBridgeMode.value = null
     }
   }
 
@@ -113,35 +96,19 @@ export function useBridge() {
     const nextSocket = openWebSocket(webSocketUrl)
     websocket.value = nextSocket
 
-    nextSocket.onopen = () => {
-      websocketConnected.value = true
-    }
-
     nextSocket.onmessage = (event) => {
-      const nextSnapshot = JSON.parse(event.data) as BridgeSnapshot
-
-      if (pendingMode.value !== null && nextSnapshot.mode !== pendingMode.value) {
-        snapshot.value = {
-          ...nextSnapshot,
-          mode: pendingMode.value,
-        }
-      } else {
-        pendingMode.value = null
-        snapshot.value = nextSnapshot
-      }
-
+      snapshot.value = JSON.parse(event.data) as BridgeSnapshot
+      bridgeMode.value = snapshot.value.mode
       error.value = null
     }
 
     nextSocket.onerror = () => {
-      websocketConnected.value = false
       if (!snapshot.value) {
         error.value = 'Bridge WebSocket connection failed'
       }
     }
 
     nextSocket.onclose = () => {
-      websocketConnected.value = false
       websocket.value = null
       scheduleReconnect()
     }
@@ -159,10 +126,9 @@ export function useBridge() {
       window.clearTimeout(reconnectTimer.value)
       reconnectTimer.value = null
     }
-    websocketConnected.value = false
     websocket.value?.close()
     websocket.value = null
   })
 
-  return { submittingBridgeMode, setBridgeMode, snapshot, loading, error, brokerConnected, bridgeOnline, liveConnected }
+  return { bridgeMode, submittingBridgeMode, setBridgeMode, snapshot, loading, error, brokerConnected, bridgeOnline, liveConnected }
 }
