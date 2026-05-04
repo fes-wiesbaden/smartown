@@ -11,6 +11,8 @@ export function useLanterns() {
   const loading = shallowRef(true)
   const error = shallowRef<string | null>(null)
   const submittingMode = shallowRef<LanternMode | null>(null)
+  const pendingMode = shallowRef<LanternMode | null>(null)
+  const latestModeRequestId = shallowRef(0)
   const websocket = shallowRef<WebSocket | null>(null)
   const websocketConnected = shallowRef(false)
   const reconnectTimer = shallowRef<number | null>(null)
@@ -48,7 +50,10 @@ export function useLanterns() {
    * Sendet einen manuellen Moduswechsel an das Backend.
    */
   async function setMode(mode: LanternMode) {
+    const requestId = latestModeRequestId.value + 1
+    latestModeRequestId.value = requestId
     submittingMode.value = mode
+    pendingMode.value = mode
     error.value = null
 
     try {
@@ -64,6 +69,10 @@ export function useLanterns() {
         throw new Error(`Mode update failed with status ${response.status}`)
       }
 
+      if (requestId !== latestModeRequestId.value) {
+        return
+      }
+
       // Das Backend bestaetigt den Command sofort, der echte Zielzustand kommt aber asynchron per WebSocket.
       // Deshalb darf ein alter REST-Snapshot den gerade geklickten Modus nicht wieder auf AUTO zuruecksetzen.
       if (snapshot.value) {
@@ -76,9 +85,14 @@ export function useLanterns() {
         }
       }
     } catch (requestError) {
-      error.value = requestError instanceof Error ? requestError.message : 'Mode update failed'
+      if (requestId === latestModeRequestId.value) {
+        pendingMode.value = null
+        error.value = requestError instanceof Error ? requestError.message : 'Mode update failed'
+      }
     } finally {
-      submittingMode.value = null
+      if (requestId === latestModeRequestId.value) {
+        submittingMode.value = null
+      }
     }
   }
 
@@ -112,7 +126,21 @@ export function useLanterns() {
     }
 
     nextSocket.onmessage = (event) => {
-      snapshot.value = JSON.parse(event.data) as LanternSnapshot
+      const nextSnapshot = JSON.parse(event.data) as LanternSnapshot
+
+      if (pendingMode.value !== null && nextSnapshot.state.mode !== pendingMode.value) {
+        snapshot.value = {
+          ...nextSnapshot,
+          state: {
+            ...nextSnapshot.state,
+            mode: pendingMode.value,
+          },
+        }
+      } else {
+        pendingMode.value = null
+        snapshot.value = nextSnapshot
+      }
+
       error.value = null
     }
 

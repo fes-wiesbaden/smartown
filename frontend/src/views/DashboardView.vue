@@ -17,7 +17,7 @@ const dashboardLogoUrl = '/smartown-logo.png'
  * Bindet Snapshot, Live-Status und Moduswechsel in die Dashboard-Ansicht ein.
  */
 const { brokerConnected, error, lanternOnline, liveConnected: lanternLiveConnected, loading, setMode, snapshot, submittingMode } = useLanterns()
-const { bridgeMode, submittingBridgeMode, setBridgeMode, snapshot: bridgeSnapshot, loading: bridgeLoading, error: bridgeError, brokerConnected: bridgeBroker, bridgeOnline, liveConnected: bridgeLiveConnected } = useBridge()
+const { submittingBridgeMode, setBridgeMode, snapshot: bridgeSnapshot, loading: bridgeLoading, error: bridgeError, brokerConnected: bridgeBroker, bridgeOnline, liveConnected: bridgeLiveConnected } = useBridge()
 const airportMode = shallowRef<AirportMode>('OFF')
 
 const lanternControlsEnabled = computed(() => brokerConnected.value && lanternOnline.value)
@@ -119,7 +119,7 @@ function setAirportMode(mode: AirportMode) {
       />
       <BridgeModeControls
         :controls-enabled="bridgeControlsEnabled"
-        :current-mode="bridgeMode"
+        :current-mode="bridgeSnapshot?.mode ?? null"
         :submitting-mode="submittingBridgeMode"
         @set-mode="setBridgeMode"
       />
