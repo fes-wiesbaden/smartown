@@ -1,3 +1,9 @@
+/*
+ * KI-Hinweis:
+ * Diese Firmwaredatei wurde mit Unterstützung von KI angefertigt und/oder überarbeitet.
+ * Verwendete Werkzeuge: https://www.claude.ai und https://www.chatgpt.com
+ * Der Code wurde projektbezogen geprüft und validiert.
+ */
 #include <ArduinoJson.h>
 #include <PubSubClient.h>
 #include <WiFi.h>

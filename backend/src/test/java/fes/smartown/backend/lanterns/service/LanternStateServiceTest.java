@@ -1,3 +1,9 @@
+/**
+ * KI-Hinweis:
+ * Diese Testklasse wurde mit Unterstützung von KI angefertigt und/oder überarbeitet.
+ * Verwendete Werkzeuge: https://www.claude.ai und https://www.chatgpt.com
+ * Der Code wurde projektbezogen geprüft und validiert.
+ */
 package fes.smartown.backend.lanterns.service;
 
 import fes.smartown.backend.lanterns.model.LanternEventPayload;
@@ -19,6 +25,24 @@ import static org.mockito.Mockito.verify;
  * Prueft das Zusammenfuehren von State- und Event-Daten im In-Memory-Snapshot.
  */
 class LanternStateServiceTest {
+
+    @Test
+    /**
+     * Erwartet, dass auch reine Event-Nachrichten die Laterne als online markieren.
+     */
+    void marksLanternOnlineWhenOnlyAnEventArrives() {
+        LanternRealtimeService realtimeService = mock(LanternRealtimeService.class);
+        LanternStateService lanternStateService = new LanternStateService(realtimeService);
+
+        var snapshot = lanternStateService.handleEvent(new LanternEventPayload(
+                "LIGHT_STATE_CHANGED",
+                LightState.ON,
+                LanternReason.MANUAL_OVERRIDE
+        ), Instant.parse("2026-04-29T10:15:00Z"));
+
+        assertThat(snapshot.state().online()).isTrue();
+        verify(realtimeService).broadcast(org.mockito.ArgumentMatchers.any());
+    }
 
     @Test
     /**

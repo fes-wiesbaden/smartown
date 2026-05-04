@@ -1,3 +1,9 @@
+/**
+ * KI-Hinweis:
+ * Diese Testklasse wurde mit Unterstützung von KI angefertigt und/oder überarbeitet.
+ * Verwendete Werkzeuge: https://www.claude.ai und https://www.chatgpt.com
+ * Der Code wurde projektbezogen geprüft und validiert.
+ */
 package fes.smartown.backend.mqtt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -75,7 +81,7 @@ class MqttLanternBridgeTest {
         when(mqttClient.isConnected()).thenReturn(true);
         MqttLanternBridge bridge = bridge(lanternStateService, mqttClient, reconnectExecutor);
 
-        bridge.publishModeCommand(LanternMode.FORCED_OFF);
+        bridge.publishModeCommand(LanternMode.OFF);
 
         verify(mqttClient).connect(any());
         verify(mqttClient).subscribe("smartown/lanterns/state", 1);
@@ -90,7 +96,7 @@ class MqttLanternBridgeTest {
                 LanternCommandPayload.class
         );
         assertThat(payload.action()).isEqualTo("SET_MODE");
-        assertThat(payload.mode()).isEqualTo(LanternMode.FORCED_OFF);
+        assertThat(payload.mode()).isEqualTo(LanternMode.OFF);
     }
 
     @Test

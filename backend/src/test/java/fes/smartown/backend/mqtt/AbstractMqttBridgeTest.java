@@ -1,3 +1,9 @@
+/**
+ * KI-Hinweis:
+ * Diese Testklasse wurde mit Unterstützung von KI angefertigt und/oder überarbeitet.
+ * Verwendete Werkzeuge: https://www.claude.ai und https://www.chatgpt.com
+ * Der Code wurde projektbezogen geprüft und validiert.
+ */
 package fes.smartown.backend.mqtt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;

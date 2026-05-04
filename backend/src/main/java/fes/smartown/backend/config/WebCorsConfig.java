@@ -1,3 +1,9 @@
+/**
+ * KI-Hinweis:
+ * Diese Klasse wurde mit Unterstützung von KI angefertigt und/oder überarbeitet.
+ * Verwendete Werkzeuge: https://www.claude.ai und https://www.chatgpt.com
+ * Der Code wurde projektbezogen geprüft und validiert.
+ */
 package fes.smartown.backend.config;
 
 import org.springframework.context.annotation.Configuration;
@@ -6,13 +12,13 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 /**
- * Erlaubt lokale Frontend-Aufrufe auf die REST-API waehrend des MQTT-MVPs.
+ * Erlaubt bekannte Entwicklungs-Hosts fuer die gesamte REST-API.
  */
 public class WebCorsConfig implements WebMvcConfigurer {
 
     @Override
     /**
-     * Gibt den bekannten Entwicklungs-Hosts Zugriff auf die Laternen-API.
+     * Gibt den bekannten Entwicklungs-Hosts Zugriff auf alle API-Endpunkte.
      */
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/api/**")
@@ -21,6 +27,6 @@ public class WebCorsConfig implements WebMvcConfigurer {
                         "http://127.0.0.1:*",
                         "http://10.93.128.204:*"
                 )
-                .allowedMethods("GET", "PUT", "OPTIONS");
+                .allowedMethods("GET", "PUT", "POST", "OPTIONS");
     }
 }

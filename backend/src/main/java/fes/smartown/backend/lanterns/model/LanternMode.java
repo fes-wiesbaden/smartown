@@ -1,10 +1,16 @@
+/**
+ * KI-Hinweis:
+ * Diese Klasse wurde mit Unterstützung von KI angefertigt und/oder überarbeitet.
+ * Verwendete Werkzeuge: https://www.claude.ai und https://www.chatgpt.com
+ * Der Code wurde projektbezogen geprüft und validiert.
+ */
 package fes.smartown.backend.lanterns.model;
 
 /**
- * Unterstuetzte Betriebsmodi der Laternen im MVP.
+ * Unterstuetzte Betriebsmodi der sensorbasierten Laternensteuerung.
  */
 public enum LanternMode {
     AUTO,
-    FORCED_ON,
-    FORCED_OFF
+    ON,
+    OFF
 }

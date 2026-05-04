@@ -1,3 +1,9 @@
+/*
+ * KI-Hinweis:
+ * Diese Firmwaredatei wurde mit Unterstützung von KI angefertigt und/oder überarbeitet.
+ * Verwendete Werkzeuge: https://www.claude.ai und https://www.chatgpt.com
+ * Der Code wurde projektbezogen geprüft und validiert.
+ */
 int pins[] = {2, 4, 16, 5, 18, 19, 21, 22, 23};
 
 void setup() {
