@@ -60,6 +60,10 @@ const buttonsDisabled = computed(() => requestPending.value || controlsBlocked.v
       <span class="controls__mode">{{ currentModeLabel }}</span>
     </div>
 
+    <p v-if="!controlsEnabled" class="controls__notice">
+      Steuerung erst moeglich, wenn Broker und ESP32 online sind.
+    </p>
+
     <div class="controls__buttons">
       <button
         v-for="mode in modes"
@@ -85,7 +89,6 @@ const buttonsDisabled = computed(() => requestPending.value || controlsBlocked.v
 <style scoped>
 .controls {
   display: grid;
-  height: 100%;
   gap: 20px;
   border: 1px solid var(--theme-card-border);
   border-radius: 14px;
@@ -132,12 +135,17 @@ const buttonsDisabled = computed(() => requestPending.value || controlsBlocked.v
   gap: 12px;
 }
 
+.controls__notice {
+  margin: 0;
+  color: var(--theme-offline);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
 .controls__button {
   display: grid;
-  grid-template-rows: auto 1fr;
   gap: 8px;
-  width: 100%;
-  height: 184px;
+  min-height: 124px;
   border: 1px solid var(--theme-card-border);
   border-radius: 10px;
   padding: 16px;
@@ -178,9 +186,6 @@ const buttonsDisabled = computed(() => requestPending.value || controlsBlocked.v
   color: var(--theme-muted);
   font-size: 0.875rem;
   line-height: 1.4;
-  white-space: normal;
-  overflow-wrap: anywhere;
-  hyphens: auto;
 }
 
 @media (max-width: 840px) {

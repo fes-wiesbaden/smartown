@@ -40,14 +40,20 @@ const lightLabel = computed(() => {
 })
 
 /**
+ * Formatiert den zuletzt gemeldeten Luxwert mit Einheit.
+ */
+const luxLabel = computed(() => {
+  const lux = props.snapshot?.state.lux
+  return lux === null || lux === undefined ? '-' : `${lux.toFixed(1)} lx`
+})
+
+/**
  * Formatiert den aktuell gemeldeten Schwellwert mit Einheit.
  */
 const thresholdLabel = computed(() => {
   const threshold = props.snapshot?.state.thresholdLux
   return threshold === null || threshold === undefined ? '-' : `${threshold.toFixed(1)} lx`
 })
-
-const lanternConnectionLabel = computed(() => (props.snapshot?.state.online ? 'Online' : 'Offline'))
 </script>
 
 <template>
@@ -57,14 +63,6 @@ const lanternConnectionLabel = computed(() => (props.snapshot?.state.online ? 'O
         <p class="status-card__eyebrow">Laternen</p>
         <h2 id="lantern-status-title" class="status-card__title">Laternenstatus</h2>
       </div>
-      <p class="status-card__connection">
-        <span
-          class="status-card__connection-dot"
-          :class="snapshot?.state.online ? 'status-card__connection-dot--online' : 'status-card__connection-dot--offline'"
-          aria-hidden="true"
-        ></span>
-        {{ lanternConnectionLabel }}
-      </p>
     </div>
 
     <p v-if="loading" class="status-card__notice">Snapshot wird geladen.</p>
@@ -80,8 +78,20 @@ const lanternConnectionLabel = computed(() => (props.snapshot?.state.online ? 'O
         <strong class="status-card__value">{{ lightLabel }}</strong>
       </article>
       <article class="status-card__item">
+        <span class="status-card__label">Lux</span>
+        <strong class="status-card__value">{{ luxLabel }}</strong>
+      </article>
+      <article class="status-card__item">
         <span class="status-card__label">Schwellwert</span>
         <strong class="status-card__value">{{ thresholdLabel }}</strong>
+      </article>
+      <article class="status-card__item">
+        <span class="status-card__label">Letztes Event</span>
+        <strong class="status-card__value">{{ snapshot.lastEvent.type }}</strong>
+      </article>
+      <article class="status-card__item">
+        <span class="status-card__label">Grund</span>
+        <strong class="status-card__value">{{ snapshot.lastEvent.reason }}</strong>
       </article>
     </div>
   </section>
@@ -90,7 +100,6 @@ const lanternConnectionLabel = computed(() => (props.snapshot?.state.online ? 'O
 <style scoped>
 .status-card {
   display: grid;
-  height: 100%;
   gap: 20px;
   border: 1px solid var(--theme-card-border);
   border-radius: 14px;
@@ -121,16 +130,6 @@ const lanternConnectionLabel = computed(() => (props.snapshot?.state.online ? 'O
   font-weight: 800;
 }
 
-.status-card__connection {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0;
-  color: #172026;
-  font-size: 0.875rem;
-  font-weight: 800;
-}
-
 .status-card__notice {
   margin: 0;
   color: var(--theme-muted);
@@ -143,14 +142,13 @@ const lanternConnectionLabel = computed(() => (props.snapshot?.state.online ? 'O
 
 .status-card__grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
 }
 
 .status-card__item {
   display: grid;
   gap: 6px;
-  min-height: 96px;
   border: 1px solid var(--theme-surface-border);
   border-radius: 10px;
   padding: 16px;
@@ -168,21 +166,6 @@ const lanternConnectionLabel = computed(() => (props.snapshot?.state.online ? 'O
   color: #172026;
   font-size: 1rem;
   font-weight: 800;
-}
-
-.status-card__connection-dot {
-  width: 10px;
-  height: 10px;
-  flex-shrink: 0;
-  border-radius: 50%;
-}
-
-.status-card__connection-dot--online {
-  background: #16a34a;
-}
-
-.status-card__connection-dot--offline {
-  background: #dc2626;
 }
 
 @media (max-width: 840px) {
