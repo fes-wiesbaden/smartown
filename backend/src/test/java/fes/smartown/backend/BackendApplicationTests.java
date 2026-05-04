@@ -2,14 +2,10 @@ package fes.smartown.backend;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 
-@SpringBootTest(properties = {
-        "smartown.mqtt.enabled=false",
-        "spring.autoconfigure.exclude="
-                + "org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration,"
-                + "org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration,"
-                + "org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration"
-})
+@Import(TestcontainersConfiguration.class)
+@SpringBootTest(properties = "smartown.mqtt.enabled=false")
 class BackendApplicationTests {
 
     @Test

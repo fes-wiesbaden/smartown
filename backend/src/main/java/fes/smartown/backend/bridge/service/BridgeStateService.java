@@ -116,7 +116,7 @@ public class BridgeStateService {
             currentState = BridgeState.IDLE;
             closeBridgeSafely();
         }
-        broadcastSnapshot(receivedAt);
+        broadcastSnapshot();
     }
 
     @Scheduled(fixedDelay = 5000)

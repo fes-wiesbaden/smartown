@@ -113,7 +113,10 @@ describe('DashboardView', () => {
     expect(wrapper.text()).toContain('Online')
     expect(wrapper.text()).toContain('Nicht verbunden')
     expect(wrapper.text()).toContain('Auto')
+    expect(wrapper.text()).not.toContain('Flugzeugmessung')
+    expect(wrapper.text()).not.toContain('12.5 lx')
     expect(wrapper.text()).toContain('Unten')
+    expect(wrapper.text()).not.toContain('Letztes Event')
 
     await wrapper.get('button').trigger('click')
     await flushPromises()
@@ -200,5 +203,6 @@ describe('DashboardView', () => {
     const buttons = wrapper.findAll('button')
     expect(buttons).toHaveLength(8)
     expect(buttons.filter((button) => button.attributes('disabled') !== undefined)).toHaveLength(6)
+    expect(wrapper.text()).not.toContain('Steuerung erst moeglich, wenn Broker und ESP32 online sind.')
   })
 })
