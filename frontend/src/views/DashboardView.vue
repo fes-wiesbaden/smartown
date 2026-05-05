@@ -7,26 +7,37 @@ import BridgeModeControls from '@/components/bridge/BridgeModeControls.vue'
 import BridgeStatusCard from '@/components/bridge/BridgeStatusCard.vue'
 import LanternModeControls from '@/components/lanterns/LanternModeControls.vue'
 import LanternStatusCard from '@/components/lanterns/LanternStatusCard.vue'
+import { useAirport } from '@/composables/useAirport'
 import { useBridge } from '@/composables/useBridge'
 import { useLanterns } from '@/composables/useLanterns'
-import type { AirportMode } from '@/types/airport'
 
 const LANTERN_LIVE_WINDOW_MS = 35_000
+const AIRPORT_LIVE_WINDOW_MS = 20_000
 const BRIDGE_LIVE_WINDOW_MS = 20_000
 
 /**
  * Bindet Snapshot, Live-Status und Moduswechsel in die Dashboard-Ansicht ein.
  */
 const { brokerConnected, error, lanternOnline, liveConnected: lanternLiveConnected, loading, setMode, snapshot, submittingMode } = useLanterns()
+const {
+  airportOnline,
+  brokerConnected: airportBroker,
+  error: airportError,
+  liveConnected: airportLiveConnected,
+  loading: airportLoading,
+  setMode: setAirportMode,
+  snapshot: airportSnapshot,
+  submittingMode: submittingAirportMode,
+} = useAirport()
 const { submittingBridgeMode, setBridgeMode, snapshot: bridgeSnapshot, loading: bridgeLoading, error: bridgeError, brokerConnected: bridgeBroker, bridgeOnline, liveConnected: bridgeLiveConnected } = useBridge()
-const airportMode = shallowRef<AirportMode>('OFF')
 const liveStatusNow = shallowRef(Date.now())
 const liveStatusTimer = shallowRef<number | null>(null)
 
 const lanternControlsEnabled = computed(() => brokerConnected.value && lanternOnline.value)
+const airportControlsEnabled = computed(() => airportBroker.value && airportOnline.value)
 const bridgeControlsEnabled = computed(() => bridgeBroker.value && bridgeOnline.value)
 const mqttStates = computed(() =>
-  [snapshot.value?.brokerConnected, bridgeSnapshot.value?.brokerConnected].filter(
+  [snapshot.value?.brokerConnected, airportSnapshot.value?.brokerConnected, bridgeSnapshot.value?.brokerConnected].filter(
     (state): state is boolean => state !== undefined,
   ),
 )
@@ -53,12 +64,15 @@ function isSnapshotFresh(updatedAt: string | undefined, freshnessWindowMs: numbe
 }
 
 const lanternTelemetryLive = computed(() => isSnapshotFresh(snapshot.value?.updatedAt, LANTERN_LIVE_WINDOW_MS))
+const airportTelemetryLive = computed(() => isSnapshotFresh(airportSnapshot.value?.updatedAt, AIRPORT_LIVE_WINDOW_MS))
 const bridgeTelemetryLive = computed(() => isSnapshotFresh(bridgeSnapshot.value?.updatedAt, BRIDGE_LIVE_WINDOW_MS))
 const liveUpdatesActive = computed(
   () =>
     lanternLiveConnected.value
+    || airportLiveConnected.value
     || bridgeLiveConnected.value
     || lanternTelemetryLive.value
+    || airportTelemetryLive.value
     || bridgeTelemetryLive.value,
 )
 
@@ -75,10 +89,6 @@ const modules = computed(() => [
     online: mqttConnected.value,
   },
 ])
-
-function setAirportMode(mode: AirportMode) {
-  airportMode.value = mode
-}
 
 onMounted(() => {
   liveStatusTimer.value = window.setInterval(() => {
@@ -144,7 +154,9 @@ onUnmounted(() => {
         @set-mode="setMode"
       />
       <AirportModeControls
-        :current-mode="airportMode"
+        :controls-enabled="airportControlsEnabled"
+        :current-mode="airportSnapshot?.state.mode ?? null"
+        :submitting-mode="submittingAirportMode"
         @set-mode="setAirportMode"
       />
       <BridgeModeControls
@@ -161,7 +173,12 @@ onUnmounted(() => {
         :loading="loading"
         :snapshot="snapshot"
       />
-      <AirportStatusCard :mode="airportMode" />
+      <AirportStatusCard
+        :airport-online="airportOnline"
+        :error="airportError"
+        :loading="airportLoading"
+        :snapshot="airportSnapshot"
+      />
       <BridgeStatusCard
         :bridge-online="bridgeOnline"
         :error="bridgeError"

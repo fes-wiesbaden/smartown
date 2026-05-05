@@ -21,11 +21,14 @@ public class WebSocketConfig implements WebSocketConfigurer {
     };
 
     private final LanternWebSocketHandler lanternWebSocketHandler;
+    private final AirportWebSocketHandler airportWebSocketHandler;
     private final BridgeWebSocketHandler bridgeWebSocketHandler;
 
     public WebSocketConfig(LanternWebSocketHandler lanternWebSocketHandler,
+                           AirportWebSocketHandler airportWebSocketHandler,
                            BridgeWebSocketHandler bridgeWebSocketHandler) {
         this.lanternWebSocketHandler = lanternWebSocketHandler;
+        this.airportWebSocketHandler = airportWebSocketHandler;
         this.bridgeWebSocketHandler = bridgeWebSocketHandler;
     }
 
@@ -35,6 +38,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
      */
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
         registerHandler(registry, lanternWebSocketHandler, "/ws/lanterns");
+        registerHandler(registry, airportWebSocketHandler, "/ws/airport");
         registerHandler(registry, bridgeWebSocketHandler, "/ws/bridge");
     }
 

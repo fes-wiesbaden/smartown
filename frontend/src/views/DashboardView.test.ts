@@ -65,6 +65,15 @@ const bridgeSnapshot = {
   espOnline: true,
   updatedAt: '2026-04-23T09:00:00Z',
 }
+const airportSnapshot = {
+  state: {
+    mode: 'OFF',
+    lightsOn: false,
+    online: true,
+  },
+  brokerConnected: true,
+  updatedAt: '2026-04-23T09:00:00Z',
+}
 
 async function loadDashboardView() {
   return (await import('./DashboardView.vue')).default
@@ -78,6 +87,12 @@ describe('DashboardView', () => {
     fetchMock.mockImplementation(async (input: string) => ({
       ok: true,
       json: async () => {
+        if (input === '/api/airport') {
+          return airportSnapshot
+        }
+        if (input === '/api/airport/mode') {
+          return null
+        }
         if (input === '/api/bridge') {
           return bridgeSnapshot
         }
@@ -118,8 +133,8 @@ describe('DashboardView', () => {
     expect(wrapper.text()).toContain('Flughafen')
     expect(wrapper.text()).toContain('Brücke')
     expect(wrapper.text()).toContain('Online')
-    expect(wrapper.text()).toContain('Nicht verbunden')
     expect(wrapper.text()).toContain('Auto')
+    expect(wrapper.text()).toContain('Aus')
     expect(wrapper.text()).toContain('Unten')
 
     await wrapper.get('button').trigger('click')
@@ -137,6 +152,9 @@ describe('DashboardView', () => {
     )
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/bridge',
+    )
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/airport',
     )
   })
 
@@ -207,12 +225,18 @@ describe('DashboardView', () => {
         }
 
         return {
-          ...lanternSnapshot,
+          ...(input === '/api/airport' ? airportSnapshot : lanternSnapshot),
           brokerConnected: false,
-          state: {
-            ...lanternSnapshot.state,
-            online: false,
-          },
+          state:
+            input === '/api/airport'
+              ? {
+                  ...airportSnapshot.state,
+                  online: false,
+                }
+              : {
+                  ...lanternSnapshot.state,
+                  online: false,
+                },
         }
       },
     }))
@@ -223,6 +247,6 @@ describe('DashboardView', () => {
 
     const buttons = wrapper.findAll('button')
     expect(buttons).toHaveLength(8)
-    expect(buttons.filter((button) => button.attributes('disabled') !== undefined)).toHaveLength(6)
+    expect(buttons.filter((button) => button.attributes('disabled') !== undefined)).toHaveLength(8)
   })
 })

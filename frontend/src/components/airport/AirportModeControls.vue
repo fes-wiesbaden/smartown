@@ -4,7 +4,9 @@ import { computed } from 'vue'
 import type { AirportMode } from '@/types/airport'
 
 const props = defineProps<{
-  currentMode: AirportMode
+  controlsEnabled: boolean
+  currentMode: AirportMode | null
+  submittingMode: AirportMode | null
 }>()
 
 const emit = defineEmits<{
@@ -16,7 +18,16 @@ const modes: Array<{ value: AirportMode; label: string; description: string }> =
   { value: 'OFF', label: 'Aus', description: 'Lichter aus, Erkennung pausiert.' },
 ]
 
-const currentModeLabel = computed(() => (props.currentMode === 'ON' ? 'An' : 'Aus'))
+const currentModeLabel = computed(() => {
+  if (props.currentMode === 'ON') {
+    return 'An'
+  }
+  if (props.currentMode === 'OFF') {
+    return 'Aus'
+  }
+
+  return 'Unbekannt'
+})
 </script>
 
 <template>
@@ -36,6 +47,7 @@ const currentModeLabel = computed(() => (props.currentMode === 'ON' ? 'An' : 'Au
         class="controls__button"
         :class="{ 'controls__button--active': currentMode === mode.value }"
         type="button"
+        :disabled="!controlsEnabled || submittingMode !== null"
         @click="emit('setMode', mode.value)"
       >
         <span class="controls__button-label">{{ mode.label }}</span>
