@@ -27,9 +27,8 @@ IoT-Demostadt mit ESP32, MQTT, Spring Boot, Vue und Live-Steuerung ueber das Web
 
 <div align="center">
   <p><strong>Live-Demo</strong></p>
-  <video src="img/livePresentation.mp4" controls muted playsinline width="100%">
-    Dein Browser unterstützt das Video-Tag nicht. Das Video liegt unter <a href="img/livePresentation.mp4">img/livePresentation.mp4</a>.
-  </video>
+  <img src="img/livePresentation.gif" alt="Komplette Live-Demo der SmarTown-Weboberfläche als GIF" width="100%" />
+  <p><a href="img/livePresentation.mp4">MP4-Version öffnen</a></p>
 </div>
 
 <div align="center">
