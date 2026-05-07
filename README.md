@@ -2,7 +2,8 @@
 
 # SmarTown
 
-IoT-Demostadt mit ESP32, MQTT, Spring Boot, Vue und Live-Steuerung ueber das Web.
+Eine IoT-Demostadt auf Basis von ESP32, MQTT, Spring Boot und Vue mit Live-Steuerung über das Web, automatischer Klappbrücke, smarte Flugzeugerkennung mit dynamischer Rampenlichtanpassung 
+sowie intelligenter Stadtbeleuchtung gesteuert nach Uhrzeit oder Umgebungshelligkeit.
 
 <sub><strong>Tech Stack</strong></sub>
 
@@ -19,7 +20,7 @@ IoT-Demostadt mit ESP32, MQTT, Spring Boot, Vue und Live-Steuerung ueber das Web
 [![Stars](https://img.shields.io/github/stars/fes-wiesbaden/iot-smartown-gruppe-1?style=flat-square)](https://github.com/fes-wiesbaden/iot-smartown-gruppe-1/stargazers)
 [![Forks](https://img.shields.io/github/forks/fes-wiesbaden/iot-smartown-gruppe-1?style=flat-square)](https://github.com/fes-wiesbaden/iot-smartown-gruppe-1/network/members)
 
-[Demo](#demo) • [Überblick](#überblick) • [Einrichtung](#einrichtung) • [Netzwerk](#netzwerk) • [Architektur](#architektur-grob) • [Entwicklungsworkflow](#entwicklungsworkflow) • [Entwicklungsregeln Git](#entwicklungsregeln-git)
+[Demo](#demo) • [Überblick](#überblick) • [Einrichtung](#einrichtung)
 
 </div>
 
@@ -27,8 +28,7 @@ IoT-Demostadt mit ESP32, MQTT, Spring Boot, Vue und Live-Steuerung ueber das Web
 
 <div align="center">
   <p><strong>Live-Demo</strong></p>
-  <video src="img/livePresentation.mp4" controls muted playsinline width="900">
-    Dein Browser kann dieses Video nicht direkt anzeigen.
+  <video src="https://github.com/user-attachments/assets/cc608daf-67d7-4f6e-a3fe-bfc2622e0c72" controls muted playsinline width="900">
   </video>
 </div>
 
@@ -137,52 +137,7 @@ Nur ausführen, wenn alle lokalen Docker-Compose-Daten und Images dieses Projekt
 docker compose down -v --rmi all 
 ```
 
-## Netzwerk
-Statische Adressen fuer das Projekt:
-
-| Geraet | IP-Adresse | Hinweis |
-|---|---|---|
-| Raspberry Pi | 10.93.128.204 | Docker-Host, MQTT-Broker, Backend, Frontend, MariaDB |
-| Reserve | 10.93.128.205 | frei fuer ESP32 oder weiteres Geraet |
-| Reserve | 10.93.128.206 | frei fuer ESP32 oder weiteres Geraet |
-| Reserve | 10.93.128.207 | frei fuer ESP32 oder weiteres Geraet |
-| Reserve | 10.93.128.208 | frei fuer ESP32 oder weiteres Geraet |
-
-Feste Netzparameter fuer alle statischen Geraete:
-
-| Parameter | Wert |
-|---|---|
-| Subnetzmaske | 255.255.240.0 |
-| Gateway | 10.93.128.1 |
-| DNS | 10.93.128.1 |
-
-
-## Architektur (grob)
-| Schicht             | Inhalt                                                                                                                                     |
-|---------------------|--------------------------------------------------------------------------------------------------------------------------------------------|
-| Hardware            | Drei ESP32, Sensoren wie BH1750 und Ultraschall, Aktoren wie Stepper und LEDs                                                              |
-| Firmware            | Arduino-basierte ESP32-Firmware pro Modul, liest Sensoren ein, empfängt Befehle per MQTT und setzt Aktoren um                              |
-| Raspberry Pi/Laptop | Zentrale Plattform für den Finalbetrieb mit Docker: MQTT-Broker, MariaDB, Spring Boot Backend und Vue-/Nginx-Frontend                      |
-| Backend             | REST-API für Steuerbefehle, MQTT-Subscriber/Publisher, Entscheidungslogik, Speicherung in MariaDB, Weitergabe von Live-Daten per WebSocket |
-| Frontend            | Vue-Dashboard für Live-Status, Schalter und Parametrierung wie Schwellwerte                                                                |
-| Datenbank           | MariaDB zur Speicherung von Zuständen, Konfiguration und optional später Historien                                                         |
-
-## Entwicklungsworkflow
-1. Das Projekt nutzt drei ESP32 mit klarer Modultrennung. Ein Sketch laeuft immer genau auf einem ESP32.
-2. Hardwaretests laufen direkt per USB-C/USB am Laptop. Sensorik, Aktorik, Flashen und serielle Logs werden lokal getestet. Solange nur die serielle Verbindung genutzt wird, spielen statische IP-Adressen keine Rolle.
-3. Backend, Frontend und Datenbank werden zunächst lokal mit Mock-Daten oder einem kleinen Simulator für Sensorwerte entwickelt.
-4. In der Integrationsphase werden Firmware, MQTT, REST, WebSocket und Hardware schrittweise zusammengeführt. Erst ab der Netzwerkintegration von ESP32 und Raspberry Pi sind statische IP-Adressen relevant.
-5. Im Finalbetrieb läuft die Anwendung dann auf dem Raspberry Pi/Laptop mit Docker: vier Container für MQTT-Broker, MariaDB, Backend und Frontend.
-
 Aktuelle Modulaufteilung:
 - ESP32 1: Laternen in der Stadt
 - ESP32 2: Flughafen mit Laternen und Ultraschallwellensensor
 - ESP32 3: klappbare Bruecke
-
-## Entwicklungsregeln Git
-1. Es gibt die Branches `main` und `dev`.
-2. Jeder arbeitet immer in einem eigenen Branch. Der Branchname beginnt immer mit dem eigenen Namen, z. B. `jan`.
-3. Subbranches beginnen ebenfalls mit dem eigenen Namen und danach optional mit dem Feature, z. B. `jan-frontend` oder `jan-mqtt-fix`.
-4. Es wird nicht direkt auf `main` gearbeitet.
-5. Feature- und Personen-Branches werden zuerst in `dev` gemergt.
-6. Erst wenn der Stand auf `dev` gemeinsam geprüft und vereinheitlicht wurde, wird von `dev` nach `main` gemergt.
