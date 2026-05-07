@@ -11,7 +11,7 @@ namespace {
 constexpr char TOPIC_COMMAND[] = "smartown/lanterns/command";
 constexpr char TOPIC_STATE[] = "smartown/lanterns/state";
 constexpr char TOPIC_EVENT[] = "smartown/lanterns/event";
-constexpr float THRESHOLD_LUX = 100.0F;
+constexpr float DARKNESS_THRESHOLD_LUX = 100.0F;
 constexpr uint8_t I2C_SDA_PIN = 21;
 constexpr uint8_t I2C_SCL_PIN = 22;
 constexpr uint8_t PWM_DRIVER_ADDRESS = 0x40;
@@ -46,7 +46,7 @@ unsigned long lastStatePublishMs = 0;
 char mqttClientId[32] = "";
 bool startupEventPublished = false;
 
-// Uebersetzt den internen Modus in das MQTT-Schema des Projekts.
+// Übersetzt den internen Modus in das MQTT-Schema des Projekts.
 const char *modeToString(LanternMode mode) {
   switch (mode) {
     case LanternMode::Auto:
@@ -60,7 +60,7 @@ const char *modeToString(LanternMode mode) {
   return "AUTO";
 }
 
-// Uebersetzt den physischen Lampenzustand in den MQTT-Wert.
+// Übersetzt den physischen Lampenzustand in den MQTT-Wert.
 const char *lightStateToString(LightState lightState) {
   return lightState == LightState::On ? "ON" : "OFF";
 }
@@ -69,7 +69,7 @@ const char *reasonForLux(float lux) {
   return lux < DARKNESS_THRESHOLD_LUX ? "LOW_LUX" : "HIGH_LUX";
 }
 
-// Unbekannte Werte fallen bewusst auf AUTO zurueck, damit fehlerhafte Commands keinen Dauerzustand erzwingen.
+// Unbekannte Werte fallen bewusst auf AUTO zurück, damit fehlerhafte Commands keinen Dauerzustand erzwingen.
 LanternMode parseMode(const String &mode) {
   if (mode == "ON") {
     return LanternMode::On;
@@ -86,7 +86,7 @@ bool isValidLux(float lux) {
 }
 
 void setLanternOutputs(bool enabled) {
-  // Die PCA9685-Kanaele werden gemeinsam geschaltet, weil alle Laternen denselben Zustand teilen.
+  // Die PCA9685-Kanäle werden gemeinsam geschaltet, weil alle Laternen denselben Zustand teilen.
   for (uint8_t channel = FIRST_LANTERN_CHANNEL; channel <= LAST_LANTERN_CHANNEL; channel++) {
     pwm.setPWM(channel, 0, enabled ? 0 : 4095);
   }
@@ -100,7 +100,7 @@ LightState determineTargetLightState(LanternMode mode, float lux, bool hasLux, L
     return LightState::Off;
   }
   if (!hasLux) {
-    // Ohne gueltigen Sensorwert bleibt der letzte Ausgangszustand erhalten.
+    // Ohne gültigen Sensorwert bleibt der letzte Ausgangszustand erhalten.
     return fallback;
   }
 
@@ -287,7 +287,7 @@ void updateAutoModeFromSensorIfDue() {
   }
 }
 
-// Sendet regelmaessig den aktuellen Zustand erneut, damit Ausfaelle im Backend auffallen.
+// Sendet regelmäßig den aktuellen Zustand erneut, damit Ausfälle im Backend auffallen.
 void publishHeartbeatIfDue() {
   const unsigned long now = millis();
   if (now - lastStatePublishMs < STATE_INTERVAL_MS) {
@@ -321,7 +321,7 @@ void setup() {
   ensureMqttConnected();
 }
 
-// Haelt Netzwerk, MQTT und den AUTO-Modus dauerhaft aktiv.
+// Hält Netzwerk, MQTT und den AUTO-Modus dauerhaft aktiv.
 void loop() {
   ensureWifiConnected();
   ensureMqttConnected();

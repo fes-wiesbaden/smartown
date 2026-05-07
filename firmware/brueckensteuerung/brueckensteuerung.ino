@@ -4,46 +4,58 @@
 
 #include "secrets.h"
 
-const int STEPS_PER_REVOLUTION = 2048;
-const int STEP_ANGLE = 340;
-const int MOTOR_SPEED_RPM = 3;
-const unsigned long SENSOR_TIMEOUT_US = 30000;
-const unsigned long SENSOR_SETTLE_DELAY_MS = 50; 
-const unsigned long LOOP_DELAY_MS = 100;
+namespace {
+constexpr int STEPS_PER_REVOLUTION = 2048;
+constexpr int BRIDGE_TRAVEL_STEPS = 340;
+constexpr int BRIDGE_MOTOR_SPEED_RPM = 3;
+constexpr unsigned long ECHO_TIMEOUT_US = 30000;
+constexpr unsigned long SENSOR_SETTLE_DELAY_MS = 50;
+constexpr unsigned long LOOP_PAUSE_MS = 100;
+constexpr unsigned long HEARTBEAT_INTERVAL_MS = 10000;
+constexpr unsigned long EVENT_COOLDOWN_MS = 2000;
 
-// Pins für Schrittmotor (28BYJ-48)
-#define IN1 13
-#define IN2 12
-#define IN3 14
-#define IN4 27
+// 28BYJ-48 mit ULN2003. Reihenfolge im Stepper-Konstruktor ist für diesen Treiber wichtig.
+constexpr uint8_t MOTOR_IN1_PIN = 13;
+constexpr uint8_t MOTOR_IN2_PIN = 12;
+constexpr uint8_t MOTOR_IN3_PIN = 14;
+constexpr uint8_t MOTOR_IN4_PIN = 27;
 
-// Pins für Ultraschallsensoren (HC-SR04)
-#define TRIG_1_PIN 32
-#define ECHO_1_PIN 33
-#define TRIG_2_PIN 25
-#define ECHO_2_PIN 26
+// Zwei HC-SR04-Sensoren erkennen die Fahrtrichtung über die Reihenfolge der Events.
+constexpr uint8_t FIRST_SENSOR_TRIGGER_PIN = 32;
+constexpr uint8_t FIRST_SENSOR_ECHO_PIN = 33;
+constexpr uint8_t SECOND_SENSOR_TRIGGER_PIN = 25;
+constexpr uint8_t SECOND_SENSOR_ECHO_PIN = 26;
 
-// MQTT Topics
-#define MQTT_TOPIC_EVENT "smartown/bridge/event"
-#define MQTT_TOPIC_COMMAND "smartown/bridge/command"
-#define MQTT_TOPIC_STATE "smartown/bridge/state"
+constexpr char MQTT_TOPIC_EVENT[] = "smartown/bridge/event";
+constexpr char MQTT_TOPIC_COMMAND[] = "smartown/bridge/command";
+constexpr char MQTT_TOPIC_STATE[] = "smartown/bridge/state";
+constexpr char COMMAND_OPEN[] = "OPEN";
+constexpr char COMMAND_CLOSE[] = "CLOSE";
+constexpr char STATE_ONLINE[] = "ONLINE";
+constexpr char EVENT_FIRST_SENSOR[] = "BOAT_DETECTED_SENSOR_1";
+constexpr char EVENT_SECOND_SENSOR[] = "BOAT_DETECTED_SENSOR_2";
 
-const float MIN_DISTANCE_CM = 0.0;
-const float MAX_DISTANCE_CM = 4.0;
+constexpr float MIN_DETECTION_DISTANCE_CM = 0.0F;
+constexpr float MAX_DETECTION_DISTANCE_CM = 4.0F;
+constexpr float INVALID_DISTANCE_CM = 999.0F;
 
-Stepper bridgeMotor(STEPS_PER_REVOLUTION, IN1, IN3, IN2, IN4);
+Stepper bridgeMotor(STEPS_PER_REVOLUTION, MOTOR_IN1_PIN, MOTOR_IN3_PIN, MOTOR_IN2_PIN, MOTOR_IN4_PIN);
 
 WiFiClient wifiClient;
 PubSubClient mqttClient(wifiClient);
 
-bool sensor1Active = false;
-bool sensor2Active = false;
-unsigned long lastEventMs = 0;
-const unsigned long EVENT_COOLDOWN_MS = 2000;
+bool firstSensorOccupied = false;
+bool secondSensorOccupied = false;
+unsigned long lastBridgeEventMs = 0;
+unsigned long lastHeartbeatPublishMs = 0;
+unsigned long lastDistanceLogMs = 0;
 
+// Baut die Wi-Fi-Verbindung bei Bedarf wieder auf.
 void ensureWifiConnected() {
-  if (WiFi.status() == WL_CONNECTED)
+  if (WiFi.status() == WL_CONNECTED) {
     return;
+  }
+
   Serial.print("WLAN-Connect zu: ");
   Serial.println(WIFI_SSID);
   WiFi.mode(WIFI_STA);
@@ -55,23 +67,43 @@ void ensureWifiConnected() {
   Serial.println("\nWLAN verbunden!");
 }
 
+void moveBridge(int steps) {
+  bridgeMotor.setSpeed(BRIDGE_MOTOR_SPEED_RPM);
+  bridgeMotor.step(steps);
+}
+
+void openBridge() {
+  moveBridge(BRIDGE_TRAVEL_STEPS);
+}
+
+void closeBridge() {
+  moveBridge(-BRIDGE_TRAVEL_STEPS);
+}
+
+// Verarbeitet die einfachen Backend-Kommandos "OPEN" und "CLOSE".
 void handleCommand(char *topic, byte *payload, unsigned int length) {
-  String message = "";
-  for (unsigned int i = 0; i < length; ++i)
-    message += (char)payload[i];
+  if (String(topic) != MQTT_TOPIC_COMMAND) {
+    return;
+  }
+
+  String command;
+  command.reserve(length);
+  for (unsigned int i = 0; i < length; ++i) {
+    command += static_cast<char>(payload[i]);
+  }
+  command.trim();
 
   Serial.print("MQTT Befehl: ");
-  Serial.println(message);
+  Serial.println(command);
 
-  if (message.indexOf("OPEN") != -1) {
-    bridgeMotor.setSpeed(MOTOR_SPEED_RPM);
-    bridgeMotor.step(STEP_ANGLE);
-  } else if (message.indexOf("CLOSE") != -1) {
-    bridgeMotor.setSpeed(MOTOR_SPEED_RPM);
-    bridgeMotor.step(-STEP_ANGLE);
+  if (command == COMMAND_OPEN) {
+    openBridge();
+  } else if (command == COMMAND_CLOSE) {
+    closeBridge();
   }
 }
 
+// Verbindet sich mit dem Broker und abonniert Brücken-Kommandos.
 void ensureMqttConnected() {
   while (!mqttClient.connected()) {
     Serial.print("MQTT-Connect (");
@@ -88,26 +120,79 @@ void ensureMqttConnected() {
   }
 }
 
-float readDistanceCm(int trigPin, int echoPin) {
-  digitalWrite(trigPin, LOW);
+float readDistanceCm(uint8_t triggerPin, uint8_t echoPin) {
+  digitalWrite(triggerPin, LOW);
   delayMicroseconds(2);
-  digitalWrite(trigPin, HIGH);
+  digitalWrite(triggerPin, HIGH);
   delayMicroseconds(10);
-  digitalWrite(trigPin, LOW);
-  long duration = pulseIn(echoPin, HIGH, SENSOR_TIMEOUT_US);
-  if (duration == 0)
-    return 999.0;
-  return duration * 0.034 / 2.0;
+  digitalWrite(triggerPin, LOW);
+
+  const unsigned long echoDurationUs = pulseIn(echoPin, HIGH, ECHO_TIMEOUT_US);
+  if (echoDurationUs == 0) {
+    return INVALID_DISTANCE_CM;
+  }
+
+  return echoDurationUs * 0.034F / 2.0F;
 }
 
+bool isBoatInDetectionRange(float distanceCm) {
+  return distanceCm >= MIN_DETECTION_DISTANCE_CM && distanceCm <= MAX_DETECTION_DISTANCE_CM;
+}
+
+void publishHeartbeatIfDue() {
+  const unsigned long now = millis();
+  if (now - lastHeartbeatPublishMs <= HEARTBEAT_INTERVAL_MS) {
+    return;
+  }
+
+  mqttClient.publish(MQTT_TOPIC_STATE, STATE_ONLINE);
+  lastHeartbeatPublishMs = now;
+}
+
+void logDistancesIfDue(float firstSensorDistanceCm, float secondSensorDistanceCm) {
+  const unsigned long now = millis();
+  if (now - lastDistanceLogMs <= 1000) {
+    return;
+  }
+
+  Serial.print("S1: ");
+  Serial.print(firstSensorDistanceCm);
+  Serial.print(" cm | S2: ");
+  Serial.print(secondSensorDistanceCm);
+  Serial.println(" cm");
+  lastDistanceLogMs = now;
+}
+
+// Sendet ein Event nur beim Eintritt in den Erfassungsbereich und mit Cooldown gegen Flattern.
+void publishSensorEventIfTriggered(
+    float distanceCm,
+    bool &sensorOccupied,
+    const char *eventPayload,
+    const char *logMessage) {
+  if (!isBoatInDetectionRange(distanceCm)) {
+    sensorOccupied = false;
+    return;
+  }
+
+  const unsigned long now = millis();
+  if (!sensorOccupied && (now - lastBridgeEventMs > EVENT_COOLDOWN_MS)) {
+    Serial.println(logMessage);
+    mqttClient.publish(MQTT_TOPIC_EVENT, eventPayload);
+    lastBridgeEventMs = now;
+    sensorOccupied = true;
+  }
+}
+}  // namespace
+
+// Initialisiert Sensorpins, Wi-Fi und MQTT.
 void setup() {
   Serial.begin(115200);
-  pinMode(TRIG_1_PIN, OUTPUT);
-  pinMode(ECHO_1_PIN, INPUT);
-  pinMode(TRIG_2_PIN, OUTPUT);
-  pinMode(ECHO_2_PIN, INPUT);
+  pinMode(FIRST_SENSOR_TRIGGER_PIN, OUTPUT);
+  pinMode(FIRST_SENSOR_ECHO_PIN, INPUT);
+  pinMode(SECOND_SENSOR_TRIGGER_PIN, OUTPUT);
+  pinMode(SECOND_SENSOR_ECHO_PIN, INPUT);
 
-  Serial.println("\n--- DIAGNOSE-MODUS AKTIVIERT ---");
+  Serial.println("\n--- BRUECKENSTEUERUNG GESTARTET ---");
 
   ensureWifiConnected();
   mqttClient.setServer(MQTT_HOST, MQTT_PORT);
@@ -115,57 +200,29 @@ void setup() {
   ensureMqttConnected();
 }
 
+// Hält Netzwerk/MQTT aktiv, misst beide Sensoren und publiziert Bootserkennung.
 void loop() {
   ensureWifiConnected();
   ensureMqttConnected();
   mqttClient.loop();
 
-  // Heartbeat alle 10s
-  static unsigned long lastHb = 0;
-  if (millis() - lastHb > 10000) {
-    mqttClient.publish("smartown/bridge/state", "ONLINE");
-    lastHb = millis();
-  }
+  publishHeartbeatIfDue();
 
-  float d1 = readDistanceCm(TRIG_1_PIN, ECHO_1_PIN);
+  const float firstSensorDistanceCm = readDistanceCm(FIRST_SENSOR_TRIGGER_PIN, FIRST_SENSOR_ECHO_PIN);
   delay(SENSOR_SETTLE_DELAY_MS);
-  float d2 = readDistanceCm(TRIG_2_PIN, ECHO_2_PIN);
+  const float secondSensorDistanceCm = readDistanceCm(SECOND_SENSOR_TRIGGER_PIN, SECOND_SENSOR_ECHO_PIN);
 
-  // DEBUG-AUSGABE JEDE SEKUNDE
-  static unsigned long lastDebug = 0;
-  if (millis() - lastDebug > 1000) {
-    Serial.print("S1: ");
-    Serial.print(d1);
-    Serial.print(" cm | ");
-    Serial.print("S2: ");
-    Serial.print(d2);
-    Serial.println(" cm");
-    lastDebug = millis();
-  }
+  logDistancesIfDue(firstSensorDistanceCm, secondSensorDistanceCm);
+  publishSensorEventIfTriggered(
+      firstSensorDistanceCm,
+      firstSensorOccupied,
+      EVENT_FIRST_SENSOR,
+      ">>> EVENT: Sensor 1 Trigger!");
+  publishSensorEventIfTriggered(
+      secondSensorDistanceCm,
+      secondSensorOccupied,
+      EVENT_SECOND_SENSOR,
+      ">>> EVENT: Sensor 2 Trigger!");
 
-  // Sensor 1 Logik
-  if (d1 >= MIN_DISTANCE_CM && d1 <= MAX_DISTANCE_CM) {
-    if (!sensor1Active && (millis() - lastEventMs > EVENT_COOLDOWN_MS)) {
-      Serial.println(">>> EVENT: Sensor 1 Trigger!");
-      mqttClient.publish("smartown/bridge/event", "BOAT_DETECTED_SENSOR_1");
-      lastEventMs = millis();
-      sensor1Active = true;
-    }
-  } else {
-    sensor1Active = false;
-  }
-
-  // Sensor 2 Logik
-  if (d2 >= MIN_DISTANCE_CM && d2 <= MAX_DISTANCE_CM) {
-    if (!sensor2Active && (millis() - lastEventMs > EVENT_COOLDOWN_MS)) {
-      Serial.println(">>> EVENT: Sensor 2 Trigger!");
-      mqttClient.publish("smartown/bridge/event", "BOAT_DETECTED_SENSOR_2");
-      lastEventMs = millis();
-      sensor2Active = true;
-    }
-  } else {
-    sensor2Active = false;
-  }
-
-  delay(LOOP_DELAY_MS);
+  delay(LOOP_PAUSE_MS);
 }
