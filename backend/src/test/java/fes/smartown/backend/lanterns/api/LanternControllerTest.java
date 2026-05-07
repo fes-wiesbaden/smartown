@@ -8,12 +8,14 @@ package fes.smartown.backend.lanterns.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fes.smartown.backend.lanterns.model.LanternEventPayload;
+import fes.smartown.backend.lanterns.model.LanternLuxHistoryPoint;
 import fes.smartown.backend.lanterns.model.LanternMode;
 import fes.smartown.backend.lanterns.model.LanternReason;
 import fes.smartown.backend.lanterns.model.LanternSnapshot;
 import fes.smartown.backend.lanterns.model.LanternStatePayload;
 import fes.smartown.backend.lanterns.model.LightState;
 import fes.smartown.backend.lanterns.service.LanternCommandPublisher;
+import fes.smartown.backend.lanterns.service.LanternLuxHistoryService;
 import fes.smartown.backend.lanterns.service.LanternStateService;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -24,6 +26,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.Instant;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doThrow;
@@ -52,6 +55,9 @@ class LanternControllerTest {
     @MockBean
     private LanternCommandPublisher lanternCommandPublisher;
 
+    @MockBean
+    private LanternLuxHistoryService lanternLuxHistoryService;
+
     @Test
     /**
      * Erwartet, dass der Snapshot unveraendert ueber GET ausgeliefert wird.
@@ -65,6 +71,21 @@ class LanternControllerTest {
                 .andExpect(jsonPath("$.state.lightState").value("ON"))
                 .andExpect(jsonPath("$.lastEvent.reason").value("LOW_LUX"))
                 .andExpect(jsonPath("$.brokerConnected").value(true));
+    }
+
+    @Test
+    void returnsPersistedLuxHistory() throws Exception {
+        when(lanternLuxHistoryService.getHistory()).thenReturn(List.of(
+                new LanternLuxHistoryPoint(Instant.parse("2026-05-05T07:00:00Z"), 9.25),
+                new LanternLuxHistoryPoint(Instant.parse("2026-05-05T07:05:00Z"), 13.75)
+        ));
+
+        mockMvc.perform(get("/api/lanterns/history"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].measuredAt").value("2026-05-05T07:00:00Z"))
+                .andExpect(jsonPath("$[0].lux").value(9.25))
+                .andExpect(jsonPath("$[1].measuredAt").value("2026-05-05T07:05:00Z"))
+                .andExpect(jsonPath("$[1].lux").value(13.75));
     }
 
     @Test

@@ -90,6 +90,12 @@ describe('DashboardView', () => {
         if (input === '/api/airport') {
           return airportSnapshot
         }
+        if (input === '/api/lanterns/history') {
+          return [
+            { measuredAt: '2026-04-23T08:50:00Z', lux: 11.2 },
+            { measuredAt: '2026-04-23T08:55:00Z', lux: 12.5 },
+          ]
+        }
         if (input === '/api/airport/mode') {
           return null
         }
@@ -132,6 +138,7 @@ describe('DashboardView', () => {
     expect(wrapper.text()).toContain('Laternen')
     expect(wrapper.text()).toContain('Flughafen')
     expect(wrapper.text()).toContain('Brücke')
+    expect(wrapper.text()).toContain('Lux-Historie')
     expect(wrapper.text()).toContain('Online')
     expect(wrapper.text()).toContain('Auto')
     expect(wrapper.text()).toContain('Aus')
@@ -142,6 +149,9 @@ describe('DashboardView', () => {
 
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/lanterns',
+    )
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/lanterns/history',
     )
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/lanterns/mode',
@@ -216,6 +226,13 @@ describe('DashboardView', () => {
     fetchMock.mockImplementation(async (input: string) => ({
       ok: true,
       json: async () => {
+        if (input === '/api/lanterns/history') {
+          return [
+            { measuredAt: '2026-04-23T08:50:00Z', lux: 11.2 },
+            { measuredAt: '2026-04-23T08:55:00Z', lux: 12.5 },
+          ]
+        }
+
         if (input === '/api/bridge') {
           return {
             ...bridgeSnapshot,

@@ -21,6 +21,12 @@ export interface LanternEventPayload {
   reason: LanternReason
 }
 
+/** Ein einzelner historischer Lux-Messwert aus der Datenbank. */
+export interface LanternLuxHistoryPoint {
+  measuredAt: string
+  lux: number
+}
+
 /** Kombiniert den aktuellen Zustand mit Broker- und Zeitinformationen. */
 export interface LanternSnapshot {
   state: LanternStatePayload

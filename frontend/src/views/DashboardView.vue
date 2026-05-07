@@ -5,10 +5,12 @@ import AirportModeControls from '@/components/airport/AirportModeControls.vue'
 import AirportStatusCard from '@/components/airport/AirportStatusCard.vue'
 import BridgeModeControls from '@/components/bridge/BridgeModeControls.vue'
 import BridgeStatusCard from '@/components/bridge/BridgeStatusCard.vue'
+import LanternLuxChartCard from '@/components/lanterns/LanternLuxChartCard.vue'
 import LanternModeControls from '@/components/lanterns/LanternModeControls.vue'
 import LanternStatusCard from '@/components/lanterns/LanternStatusCard.vue'
 import { useAirport } from '@/composables/useAirport'
 import { useBridge } from '@/composables/useBridge'
+import { useLanternLuxHistory } from '@/composables/useLanternLuxHistory'
 import { useLanterns } from '@/composables/useLanterns'
 
 const LANTERN_LIVE_WINDOW_MS = 35_000
@@ -19,6 +21,7 @@ const BRIDGE_LIVE_WINDOW_MS = 20_000
  * Bindet Snapshot, Live-Status und Moduswechsel in die Dashboard-Ansicht ein.
  */
 const { brokerConnected, error, lanternOnline, liveConnected: lanternLiveConnected, loading, setMode, snapshot, submittingMode } = useLanterns()
+const { error: lanternHistoryError, loading: lanternHistoryLoading, points: lanternHistoryPoints } = useLanternLuxHistory()
 const {
   airportOnline,
   brokerConnected: airportBroker,
@@ -184,6 +187,14 @@ onUnmounted(() => {
         :error="bridgeError"
         :loading="bridgeLoading"
         :snapshot="bridgeSnapshot"
+      />
+    </section>
+
+    <section class="dashboard__section" aria-label="Lux-Verlauf">
+      <LanternLuxChartCard
+        :error="lanternHistoryError"
+        :loading="lanternHistoryLoading"
+        :points="lanternHistoryPoints"
       />
     </section>
   </main>

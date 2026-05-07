@@ -4,6 +4,7 @@ import fes.smartown.backend.lanterns.model.LanternMode;
 import fes.smartown.backend.lanterns.model.LanternModeRequest;
 import fes.smartown.backend.lanterns.model.LanternSnapshot;
 import fes.smartown.backend.lanterns.service.LanternCommandPublisher;
+import fes.smartown.backend.lanterns.service.LanternLuxHistoryService;
 import fes.smartown.backend.lanterns.service.LanternStateService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -24,11 +25,14 @@ public class LanternController {
 
     private final LanternStateService lanternStateService;
     private final LanternCommandPublisher lanternCommandPublisher;
+    private final LanternLuxHistoryService lanternLuxHistoryService;
 
     public LanternController(LanternStateService lanternStateService,
-                             LanternCommandPublisher lanternCommandPublisher) {
+                             LanternCommandPublisher lanternCommandPublisher,
+                             LanternLuxHistoryService lanternLuxHistoryService) {
         this.lanternStateService = lanternStateService;
         this.lanternCommandPublisher = lanternCommandPublisher;
+        this.lanternLuxHistoryService = lanternLuxHistoryService;
     }
 
     @GetMapping
@@ -37,6 +41,14 @@ public class LanternController {
      */
     public LanternSnapshot getSnapshot() {
         return lanternStateService.getSnapshot();
+    }
+
+    @GetMapping("/history")
+    /**
+     * Liefert alle persistierten Lux-Messpunkte der aktiven Laternenkonfiguration.
+     */
+    public java.util.List<fes.smartown.backend.lanterns.model.LanternLuxHistoryPoint> getHistory() {
+        return lanternLuxHistoryService.getHistory();
     }
 
     @PutMapping("/mode")
