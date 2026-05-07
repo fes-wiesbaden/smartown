@@ -8,12 +8,12 @@ const int STEPS_PER_REVOLUTION = 2048;
 const int STEP_ANGLE = 340;
 const int MOTOR_SPEED_RPM = 3;
 const unsigned long SENSOR_TIMEOUT_US = 30000;
-const unsigned long SENSOR_SETTLE_DELAY_MS = 50; // Erhöht für Stabilität
+const unsigned long SENSOR_SETTLE_DELAY_MS = 50; 
 const unsigned long LOOP_DELAY_MS = 100;
 
-// Pins für Schrittmotor (28BYJ-48 mit ULN2003)
+// Pins für Schrittmotor (28BYJ-48)
 #define IN1 13
-#define IN2 12 // User hat IN2 wieder auf 12 gesteckt!
+#define IN2 12
 #define IN3 14
 #define IN4 27
 
@@ -28,7 +28,7 @@ const unsigned long LOOP_DELAY_MS = 100;
 #define MQTT_TOPIC_COMMAND "smartown/bridge/command"
 #define MQTT_TOPIC_STATE "smartown/bridge/state"
 
-const float MIN_DISTANCE_CM = 0;
+const float MIN_DISTANCE_CM = 0.0;
 const float MAX_DISTANCE_CM = 4.0;
 
 Stepper bridgeMotor(STEPS_PER_REVOLUTION, IN1, IN3, IN2, IN4);
